@@ -40,7 +40,7 @@ func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	writer.WriteHeader(201)
-	writer.Write([]byte(GenerateShortLink(body)))
+	writer.Write([]byte(GenerateShortLink(string(body))))
 }
 
 func GetLinkByID(writer http.ResponseWriter, request *http.Request) {
@@ -69,8 +69,8 @@ func GenerateRandomString(n int) string {
 	return string(s)
 }
 
-func GenerateShortLink(url []byte) []byte {
+func GenerateShortLink(url string) string {
 	newURL := GenerateRandomString(5)
-	LinksMap[newURL] = string(url)
-	return []byte(newURL)
+	LinksMap[newURL] = url
+	return newURL
 }
