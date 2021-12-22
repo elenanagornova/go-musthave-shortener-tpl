@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -29,6 +28,8 @@ func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 
 func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 	body, err := io.ReadAll(request.Body)
+	defer request.Body.Close()
+
 	if err != nil {
 		http.Error(writer, "Something wrong with request", http.StatusBadRequest)
 		return
@@ -38,15 +39,8 @@ func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var originalLink string
-	err = json.Unmarshal(body, &originalLink)
-	if err != nil {
-		http.Error(writer, "Unmarshalling error", http.StatusBadRequest)
-		return
-	}
-
 	writer.WriteHeader(201)
-	writer.Write(GenerateShortLink(originalLink))
+	writer.Write([]byte(GenerateShortLink(body)))
 }
 
 func GetLinkByID(writer http.ResponseWriter, request *http.Request) {
@@ -75,8 +69,8 @@ func GenerateRandomString(n int) string {
 	return string(s)
 }
 
-func GenerateShortLink(url string) []byte {
+func GenerateShortLink(url []byte) []byte {
 	newURL := GenerateRandomString(5)
-	LinksMap[newURL] = url
+	LinksMap[newURL] = string(url)
 	return []byte(newURL)
 }
