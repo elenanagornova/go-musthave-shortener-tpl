@@ -11,11 +11,13 @@ import (
 
 var LinksMap = make(map[string]string)
 
+const addr string = "localhost:8080"
+
 func main() {
 	http.HandleFunc("/", ShortenerHandler)
 
-	fmt.Printf("Starting server at port 8080\n")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Starting server at port 8080")
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -55,8 +57,7 @@ func GetLinkByID(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Link not found", http.StatusBadRequest)
 		return
 	}
-
-	writer.Header().Add("Location", originalLink)
+	writer.Header().Set("Location", originalLink)
 	writer.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -72,5 +73,5 @@ func GenerateRandomString(n int) string {
 func GenerateShortLink(url string) string {
 	newURL := GenerateRandomString(5)
 	LinksMap[newURL] = url
-	return newURL
+	return "http://" + addr + "/" + newURL
 }
