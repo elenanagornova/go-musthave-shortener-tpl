@@ -7,15 +7,18 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 )
 
+// TODO mutex
 var LinksMap = make(map[string]string)
 
 const addr string = "localhost:8080"
 
 func main() {
-	http.HandleFunc("/", ShortenerHandler)
+	rand.Seed(time.Now().UTC().UnixNano())
 
+	http.HandleFunc("/", ShortenerHandler)
 	fmt.Println("Starting server at port 8080")
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
@@ -24,41 +27,44 @@ func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		GetLinkByID(w, r)
 	case "POST":
-		SetShortLink(w, r)
+		MakeShortLink(w, r)
+	default:
+		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
 	}
+
+	// TODO default
 }
 
-func SetShortLink(writer http.ResponseWriter, request *http.Request) {
-	body, err := io.ReadAll(request.Body)
-	defer request.Body.Close()
+func MakeShortLink(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 
 	if err != nil {
-		http.Error(writer, "Something wrong with request", http.StatusBadRequest)
+		http.Error(w, "Something wrong with request", http.StatusBadRequest)
 		return
 	}
 	if len(body) == 0 {
-		http.Error(writer, "Request body is empty", http.StatusBadRequest)
+		http.Error(w, "Request body is empty", http.StatusBadRequest)
 		return
 	}
 
-	writer.WriteHeader(http.StatusCreated)
-	writer.Write([]byte(GenerateShortLink(string(body))))
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(GenerateShortLink(string(body))))
 }
 
-func GetLinkByID(writer http.ResponseWriter, request *http.Request) {
-	path := strings.TrimLeft(request.URL.Path, "/")
+func GetLinkByID(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimLeft(r.URL.Path, "/")
 	if path == "" {
-		http.Error(writer, "The path is missing", http.StatusBadRequest)
+		http.Error(w, "The path is missing", http.StatusBadRequest)
 		return
 	}
 
 	originalLink, ok := LinksMap[path]
 	if !ok {
-		http.Error(writer, "Link not found", http.StatusBadRequest)
+		http.Error(w, "Link not found", http.StatusBadRequest)
 		return
 	}
-	writer.Header().Set("Location", originalLink)
-	writer.WriteHeader(http.StatusTemporaryRedirect)
+	w.Header().Set("Location", originalLink)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
 func GenerateRandomString(n int) string {
@@ -71,7 +77,7 @@ func GenerateRandomString(n int) string {
 }
 
 func GenerateShortLink(url string) string {
-	newURL := GenerateRandomString(5)
-	LinksMap[newURL] = url
-	return "http://" + addr + "/" + newURL
+	id := GenerateRandomString(5)
+	LinksMap[id] = url
+	return "http://" + addr + "/" + id
 }
