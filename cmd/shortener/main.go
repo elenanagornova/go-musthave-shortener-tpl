@@ -39,7 +39,7 @@ func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writer.WriteHeader(201)
+	writer.WriteHeader(http.StatusCreated)
 	writer.Write([]byte(GenerateShortLink(string(body))))
 }
 
