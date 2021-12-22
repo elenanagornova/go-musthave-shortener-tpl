@@ -21,7 +21,7 @@ func main() {
 func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		GetLinkById(w, r)
+		GetLinkByID(w, r)
 	case "POST":
 		SetShortLink(w, r)
 	}
@@ -46,10 +46,10 @@ func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	writer.WriteHeader(201)
-	fmt.Fprintf(writer, GenerateShortLink(originalLink))
+	writer.Write(GenerateShortLink(originalLink))
 }
 
-func GetLinkById(writer http.ResponseWriter, request *http.Request) {
+func GetLinkByID(writer http.ResponseWriter, request *http.Request) {
 	path := strings.TrimLeft(request.URL.Path, "/")
 	if path == "" {
 		http.Error(writer, "The path is missing", http.StatusBadRequest)
@@ -75,8 +75,8 @@ func GenerateRandomString(n int) string {
 	return string(s)
 }
 
-func GenerateShortLink(url string) string {
-	newUrl := GenerateRandomString(5)
-	LinksMap[newUrl] = url
-	return newUrl
+func GenerateShortLink(url string) []byte {
+	newURL := GenerateRandomString(5)
+	LinksMap[newURL] = url
+	return []byte(newURL)
 }
