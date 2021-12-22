@@ -7,68 +7,66 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 )
 
-var LinksMap map[string]string
+var LinksMap = make(map[string]string)
 
 func main() {
-	LinksMap = make(map[string]string)
+	http.HandleFunc("/", ShortenerHandler)
 
-	http.HandleFunc("/", multiplexer)
-	err := http.ListenAndServe(":8080", nil)
-	check(err)
-
+	fmt.Printf("Starting server at port 8080\n")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
-func multiplexer(w http.ResponseWriter, r *http.Request) {
+func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		GetLinkById(w, r)
 	case "POST":
-		GetShortLink(w, r)
+		SetShortLink(w, r)
 	}
 }
 
-func GetShortLink(writer http.ResponseWriter, request *http.Request) {
-
+func SetShortLink(writer http.ResponseWriter, request *http.Request) {
 	body, err := io.ReadAll(request.Body)
-	check(err)
-	if body == nil {
+	if err != nil {
+		http.Error(writer, "Something wrong with request", http.StatusBadRequest)
+		return
+	}
+	if len(body) == 0 {
 		http.Error(writer, "Request body is empty", http.StatusBadRequest)
 		return
 	}
 
-	var t urlsStruct
-	err = json.Unmarshal(body, &t)
-	check(err)
+	var originalLink string
+	err = json.Unmarshal(body, &originalLink)
+	if err != nil {
+		http.Error(writer, "Unmarshalling error", http.StatusBadRequest)
+		return
+	}
 
 	writer.WriteHeader(201)
-	fmt.Fprintf(writer, GetTransformUrl(t.Url))
+	fmt.Fprintf(writer, GenerateShortLink(originalLink))
 }
 
 func GetLinkById(writer http.ResponseWriter, request *http.Request) {
-	q := request.URL.Query().Get("id")
-	if q == "" {
-		http.Error(writer, "The id parameter is missing", http.StatusBadRequest)
+	path := strings.TrimLeft(request.URL.Path, "/")
+	if path == "" {
+		http.Error(writer, "The path is missing", http.StatusBadRequest)
 		return
 	}
-	if isValueExists(LinksMap, q) != true {
-		http.Error(writer, "Don't found value", http.StatusBadRequest)
+
+	originalLink, ok := LinksMap[path]
+	if !ok {
+		http.Error(writer, "Link not found", http.StatusBadRequest)
 		return
 	}
-	writer.Header().Add("Location", LinksMap[q])
+
+	writer.Header().Add("Location", originalLink)
 	writer.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func isValueExists(links map[string]string, shortUrl string) bool {
-	_, ok := links[shortUrl]
-	return ok
-}
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-func RandomString(n int) string {
+func GenerateRandomString(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	s := make([]rune, n)
 	for i := range s {
@@ -76,12 +74,9 @@ func RandomString(n int) string {
 	}
 	return string(s)
 }
-func GetTransformUrl(url string) string {
-	newUrl := RandomString(5)
+
+func GenerateShortLink(url string) string {
+	newUrl := GenerateRandomString(5)
 	LinksMap[newUrl] = url
 	return newUrl
-}
-
-type urlsStruct struct {
-	Url string
 }
