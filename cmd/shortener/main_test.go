@@ -174,12 +174,12 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 	tests := []struct {
 		name        string
 		request     request
-		originalUrl string
+		originalURL string
 		want        want
 	}{
 		{
 			name:        "positive test #1. GET link",
-			originalUrl: "http://yandex.ru",
+			originalURL: "http://yandex.ru",
 			request: request{
 				url:    "/",
 				method: http.MethodGet,
@@ -191,7 +191,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			shortLinks := sendPostRequestForTests(tt.originalUrl)
+			shortLinks := sendPostRequestForTests(tt.originalURL)
 
 			//отправляем гет запрос на данный реквест
 			getLinkrequest := httptest.NewRequest(tt.request.method, shortLinks, nil)
@@ -200,18 +200,18 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			// запуск сервера
 			h.ServeHTTP(w, getLinkrequest)
 			res := w.Result()
-
+			defer res.Body.Close()
 			// проверяем код ответа
 			assert.True(t, res.StatusCode == tt.want.responseStatusCode)
 
 			headers := res.Header.Get("Location")
-			assert.Equal(t, headers, tt.originalUrl)
+			assert.Equal(t, headers, tt.originalURL)
 		})
 	}
 }
 
-func sendPostRequestForTests(originalUrl string) string {
-	createLinkRequest := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(originalUrl))
+func sendPostRequestForTests(originalURL string) string {
+	createLinkRequest := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(originalURL))
 	w := httptest.NewRecorder()
 	h := http.HandlerFunc(ShortenerHandler)
 	// запуск сервера
