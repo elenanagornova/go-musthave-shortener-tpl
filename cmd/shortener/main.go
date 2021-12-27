@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// TODO mutex
+//TODO mutex
 var LinksMap = make(map[string]string)
 
 const addr string = "localhost:8080"
@@ -31,8 +31,6 @@ func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
 	}
-
-	// TODO default
 }
 
 func MakeShortLink(w http.ResponseWriter, r *http.Request) {
