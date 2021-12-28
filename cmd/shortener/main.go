@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -18,21 +18,15 @@ const addr string = "localhost:8080"
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	http.HandleFunc("/", ShortenerHandler)
 	fmt.Println("Starting server at port 8080")
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(http.ListenAndServe(addr, NewRouter()))
 }
-func ShortenerHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		GetLinkByID(w, r)
-	case "POST":
-		MakeShortLink(w, r)
-	default:
-		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
-	}
+func NewRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Post("/", MakeShortLink)
+	r.Get("/{shortLink}", GetLinkByID)
+	return r
 }
-
 func MakeShortLink(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 
@@ -50,13 +44,14 @@ func MakeShortLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetLinkByID(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimLeft(r.URL.Path, "/")
-	if path == "" {
-		http.Error(w, "The path is missing", http.StatusBadRequest)
-		return
-	}
+	shortLink := chi.URLParam(r, "shortLink")
 
-	originalLink, ok := LinksMap[path]
+	//if shortLink == "" {
+	//	http.Error(w, "carID param is missed", http.StatusBadRequest)
+	//	return
+	//}
+
+	originalLink, ok := LinksMap[shortLink]
 	if !ok {
 		http.Error(w, "Link not found", http.StatusBadRequest)
 		return
