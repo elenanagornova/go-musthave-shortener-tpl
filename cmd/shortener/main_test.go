@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -70,7 +71,7 @@ func TestGetPostNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusBadRequest,
 				responseParams:     nil,
-				responseBody:       "Link not found",
+				responseBody:       "link not found",
 			},
 		},
 		{
@@ -88,7 +89,9 @@ func TestGetPostNegative(t *testing.T) {
 		},
 	}
 
-	r := NewRouter()
+	service := shortener.New(addr)
+
+	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -124,7 +127,8 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
-	r := NewRouter()
+	service := shortener.New(addr)
+	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -160,7 +164,8 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	r := NewRouter()
+	service := shortener.New(addr)
+	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
