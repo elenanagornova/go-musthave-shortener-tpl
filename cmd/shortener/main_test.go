@@ -90,9 +90,10 @@ func TestGetPostNegative(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			resp, respBody := SendTestRequest(t, ts, tt.request.method, tt.request.url, nil)
+			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, nil)
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.responseStatusCode, resp.StatusCode)
-			assert.Equal(t, tt.want.responseBody, TrimLastSymbols(respBody))
+			assert.Equal(t, tt.want.responseBody, TrimLastSymbols(body))
 		})
 	}
 }
@@ -125,6 +126,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
+			defer resp.Body.Close()
 
 			assert.True(t, resp.StatusCode == tt.want.responseStatusCode)
 
@@ -163,6 +165,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			shortLinksID := strings.Join(strings.Split(shortLinkBody, "/")[3:], "")
 
 			getResp, _ := SendTestRequest(t, ts, tt.request.method, "/"+string(shortLinksID), nil)
+			defer getResp.Body.Close()
 
 			assert.True(t, getResp.Request.Response.Request.Response.StatusCode == tt.want.responseStatusCode)
 
