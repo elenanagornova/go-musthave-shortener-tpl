@@ -46,11 +46,6 @@ func MakeShortLink(w http.ResponseWriter, r *http.Request) {
 func GetLinkByID(w http.ResponseWriter, r *http.Request) {
 	shortLink := chi.URLParam(r, "shortLink")
 
-	//if shortLink == "" {
-	//	http.Error(w, "carID param is missed", http.StatusBadRequest)
-	//	return
-	//}
-
 	originalLink, ok := LinksMap[shortLink]
 	if !ok {
 		http.Error(w, "Link not found", http.StatusBadRequest)

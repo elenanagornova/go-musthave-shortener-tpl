@@ -13,10 +13,15 @@ import (
 )
 
 func SendTestRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}}
+
 	req, err := http.NewRequest(method, ts.URL+path, body)
 	require.NoError(t, err)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	require.NoError(t, err)
 
 	respBody, err := ioutil.ReadAll(resp.Body)
@@ -169,9 +174,9 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			getResp, _ := SendTestRequest(t, ts, tt.request.method, "/"+string(shortLinksID), nil)
 			defer getResp.Body.Close()
 
-			assert.True(t, getResp.Request.Response.Request.Response.StatusCode == tt.want.responseStatusCode)
+			assert.True(t, getResp.StatusCode == tt.want.responseStatusCode)
 
-			headers := getResp.Request.Response.Request.Response.Header.Get("Location")
+			headers := getResp.Header.Get("Location")
 			assert.Equal(t, headers, tt.originalURL)
 		})
 	}
