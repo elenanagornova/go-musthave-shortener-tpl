@@ -161,7 +161,9 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, shortLinkBody := SendTestRequest(t, ts, http.MethodPost, "/", strings.NewReader(tt.originalURL))
+			postResp, shortLinkBody := SendTestRequest(t, ts, http.MethodPost, "/", strings.NewReader(tt.originalURL))
+			defer postResp.Body.Close()
+
 			shortLinksID := strings.Join(strings.Split(shortLinkBody, "/")[3:], "")
 
 			getResp, _ := SendTestRequest(t, ts, tt.request.method, "/"+string(shortLinksID), nil)
