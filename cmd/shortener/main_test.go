@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -13,8 +12,8 @@ import (
 	"testing"
 )
 
-func SendTestRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
-	req, err := http.NewRequest(method, ts.URL+path, nil)
+func SendTestRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, body)
 	require.NoError(t, err)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -24,22 +23,20 @@ func SendTestRequest(t *testing.T, ts *httptest.Server, method, path string) (*h
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
-
 	return resp, string(respBody)
 }
 
-//
-func TestRouter(t *testing.T) {
-	type want struct {
-		responseStatusCode int
-		responseParams     map[string]string
-		responseBody       string
-	}
+type want struct {
+	responseStatusCode int
+	responseParams     map[string]string
+	responseBody       string
+}
 
-	type request struct {
-		url, method, body string
-	}
+type request struct {
+	url, method, body string
+}
 
+func TestGetPostNegative(t *testing.T) {
 	tests := []struct {
 		name    string
 		request request
@@ -71,6 +68,19 @@ func TestRouter(t *testing.T) {
 				responseBody:       "Link not found",
 			},
 		},
+		{
+			name: "negative test #3. POST with empty body",
+			request: request{
+				url:    "/",
+				method: http.MethodPost,
+				body:   "",
+			},
+			want: want{
+				responseStatusCode: http.StatusBadRequest,
+				responseParams:     nil,
+				responseBody:       "Request body is empty",
+			},
+		},
 	}
 
 	r := NewRouter()
@@ -80,22 +90,14 @@ func TestRouter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url)
+			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, nil)
 			assert.Equal(t, tt.want.responseStatusCode, resp.StatusCode)
-			assert.Equal(t, tt.want.responseBody, strings.TrimRight(string(body), "\n"))
+			assert.Equal(t, tt.want.responseBody, TrimLastSymbols(body))
 		})
 	}
 }
-func TestShortenerHandlerPOSTMethod(t *testing.T) {
-	type want struct {
-		responseStatusCode int
-		responseParams     map[string]string
-		responseBody       string
-	}
 
-	type request struct {
-		url, method, body string
-	}
+func TestShortenerHandlerPOSTMethod(t *testing.T) {
 
 	tests := []struct {
 		name    string
@@ -103,20 +105,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 		want    want
 	}{
 		{
-			name: "negative test #1. POST with empty body",
-			request: request{
-				url:    "/",
-				method: http.MethodPost,
-				body:   "",
-			},
-			want: want{
-				responseStatusCode: http.StatusBadRequest,
-				responseParams:     nil,
-				responseBody:       "",
-			},
-		},
-		{
-			name: "positive test #2. POST",
+			name: "positive test #1. POST",
 			request: request{
 				url:    "/",
 				method: http.MethodPost,
@@ -129,123 +118,23 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
+	r := NewRouter()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
 
-			request := httptest.NewRequest(tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(MakeShortLink)
-			// запуск сервера
-			h.ServeHTTP(w, request)
-			res := w.Result()
+			assert.True(t, resp.StatusCode == tt.want.responseStatusCode)
 
-			// проверяем код ответа
-			assert.True(t, res.StatusCode == tt.want.responseStatusCode)
-
-			// получаем и проверяем тело запроса
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			resBodyAsStr := strings.TrimRight(string(resBody), "\n")
-			// если запрос POST и в ответе не пусто и запрос был принят, тогда проверяем ответ по regex
-			if tt.want.responseBody != "" && tt.request.method == http.MethodPost && res.StatusCode == http.StatusCreated {
-				matched, _ := regexp.MatchString(tt.want.responseBody, resBodyAsStr)
-				assert.True(t, matched)
-			} else {
-				assert.True(t, strings.HasPrefix(resBodyAsStr, tt.want.responseBody))
-			}
-		})
-	}
-}
-
-func TestShortenerHandlerGETMethod(t *testing.T) {
-	type want struct {
-		responseStatusCode int
-		responseParams     map[string]string
-		responseBody       string
-	}
-
-	type request struct {
-		url, method, body string
-	}
-
-	tests := []struct {
-		name    string
-		request request
-		want    want
-	}{
-		{
-			name: "negative test #1. GET with empty url",
-			request: request{
-				url:    "/",
-				method: http.MethodGet,
-				body:   "",
-			},
-			want: want{
-				responseStatusCode: http.StatusBadRequest,
-				responseParams:     nil,
-				responseBody:       "The path is missing",
-			},
-		},
-		{
-			name: "negative test #2. GET with unresolved value",
-			request: request{
-				url:    "/RFGts",
-				method: http.MethodGet,
-				body:   "",
-			},
-			want: want{
-				responseStatusCode: http.StatusBadRequest,
-				responseParams:     nil,
-				responseBody:       "Link not found",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			request := httptest.NewRequest(tt.request.method, tt.request.url, strings.NewReader(tt.request.body))
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(GetLinkByID)
-			// запуск сервера
-			h.ServeHTTP(w, request)
-			res := w.Result()
-
-			// проверяем код ответа
-			assert.True(t, res.StatusCode == tt.want.responseStatusCode)
-
-			// получаем и проверяем тело запроса
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			resBodyAsStr := strings.TrimRight(string(resBody), "\n")
-			// если запрос POST и в ответе не пусто и запрос был принят, тогда проверяем ответ по regex
-			if tt.want.responseBody != "" && tt.request.method == http.MethodPost && res.StatusCode == http.StatusCreated {
-				matched, _ := regexp.MatchString(tt.want.responseBody, resBodyAsStr)
-				assert.True(t, matched)
-			} else {
-				assert.True(t, strings.HasPrefix(resBodyAsStr, tt.want.responseBody))
-			}
+			matched, _ := regexp.MatchString(tt.want.responseBody, TrimLastSymbols(body))
+			assert.True(t, matched)
 		})
 	}
 }
 
 func TestShortenerHandlerGETMethodPositive(t *testing.T) {
-	type want struct {
-		responseStatusCode int
-		responseParams     map[string]string
-	}
-
-	type request struct {
-		url, method string
-	}
-
 	tests := []struct {
 		name        string
 		request     request
@@ -264,38 +153,25 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
+	r := NewRouter()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			shortLinks := sendPostRequestForTests(tt.originalURL)
+			_, shortLinkBody := SendTestRequest(t, ts, http.MethodPost, "/", strings.NewReader(tt.originalURL))
+			shortLinksId := strings.Join(strings.Split(shortLinkBody, "/")[3:], "")
 
-			//отправляем гет запрос на данный реквест
-			getLinkrequest := httptest.NewRequest(tt.request.method, shortLinks, nil)
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(GetLinkByID)
-			// запуск сервера
-			h.ServeHTTP(w, getLinkrequest)
-			res := w.Result()
-			defer res.Body.Close()
-			// проверяем код ответа
-			assert.True(t, res.StatusCode == tt.want.responseStatusCode)
+			getResp, _ := SendTestRequest(t, ts, tt.request.method, "/"+string(shortLinksId), nil)
 
-			headers := res.Header.Get("Location")
+			assert.True(t, getResp.Request.Response.Request.Response.StatusCode == tt.want.responseStatusCode)
+
+			headers := getResp.Request.Response.Request.Response.Header.Get("Location")
 			assert.Equal(t, headers, tt.originalURL)
 		})
 	}
 }
 
-func sendPostRequestForTests(originalURL string) string {
-	createLinkRequest := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(originalURL))
-	w := httptest.NewRecorder()
-	h := http.HandlerFunc(MakeShortLink)
-	// запуск сервера
-	h.ServeHTTP(w, createLinkRequest)
-	shortLink := w.Result()
-	defer shortLink.Body.Close()
-	shortLinkBody, err := io.ReadAll(shortLink.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return strings.TrimRight(string(shortLinkBody), "\n")
+func TrimLastSymbols(str string) string {
+	return strings.TrimRight(string(str), "\n")
 }
