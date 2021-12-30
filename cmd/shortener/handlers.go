@@ -25,7 +25,12 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resultLink := service.GenerateShortLink(string(body))
+		resultLink, err := service.GenerateShortLink(string(body))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(resultLink))

@@ -3,14 +3,20 @@ package shortener
 import (
 	"fmt"
 	"math/rand"
+	"net/url"
 	"time"
 )
 
 // GenerateShortLink from full link
-func (s *Shortener) GenerateShortLink(url string) string {
+func (s *Shortener) GenerateShortLink(originalURL string) (string, error) {
 	id := s.generateRandomString(5)
-	s.linksMap[id] = url
-	return fmt.Sprintf("http://%s/%s", s.addr, id)
+	s.linksMap[id] = originalURL
+	u, err := url.Parse(s.addr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse url: %w", err)
+	}
+	u.Path = id
+	return u.String(), nil
 }
 
 func (s *Shortener) generateRandomString(n int) string {
