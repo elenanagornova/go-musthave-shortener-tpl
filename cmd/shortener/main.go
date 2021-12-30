@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	addr = "http://localhost:8080"
+	addr   = "http://localhost:8080"
+	listen = ":8080"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
-		Addr:    addr,
+		Addr:    listen,
 		Handler: NewRouter(service),
 	}
 	go func() {
