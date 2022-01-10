@@ -46,7 +46,7 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 
 		originalLink, err := service.GetLink(shortLink)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
