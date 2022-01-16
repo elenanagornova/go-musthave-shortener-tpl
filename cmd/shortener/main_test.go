@@ -206,7 +206,7 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 				body:        `{"url": "http://yandex.ru"}`,
 			},
 			want: want{
-				responseStatusCode:  200,
+				responseStatusCode:  201,
 				responseParams:      nil,
 				responseContentType: "application/json",
 				responseBody:        "http://([a-zA-Z1-9]{5})",
