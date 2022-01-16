@@ -70,26 +70,15 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
 			return
 		}
-
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Something wrong with request", http.StatusBadRequest)
-			return
-		}
 		defer func() {
 			if err := r.Body.Close(); err != nil {
 				log.Println(err)
 			}
 		}()
-		if len(body) == 0 {
-			http.Error(w, "Request body is empty", http.StatusBadRequest)
-			return
-		}
 
 		var originalLink ShortenerRequest
-		err = json.Unmarshal(body, &originalLink)
-		if err != nil {
-			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+		if err := json.NewDecoder(r.Body).Decode(&originalLink); err != nil {
+			http.Error(w, "Something wrong with request", http.StatusBadRequest)
 			return
 		}
 
@@ -102,14 +91,12 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 
 		var responseBody ShortenerResponse
 		responseBody.Result = resultLink
-		respBody, err := json.Marshal(&responseBody)
-		if err != nil {
-			http.Error(w, "Marshalling error", http.StatusInternalServerError)
-			return
-		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(201)
-		w.Write(respBody)
+		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
+			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+			return
+		}
 	}
 }

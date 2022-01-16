@@ -277,7 +277,7 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusBadRequest,
 				responseParams:     nil,
-				responseBody:       "Unmarshalling error",
+				responseBody:       "Something wrong with request",
 			},
 		},
 		{
@@ -291,7 +291,7 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusBadRequest,
 				responseParams:     nil,
-				responseBody:       "Request body is empty",
+				responseBody:       "Something wrong with request",
 			},
 		},
 	}
