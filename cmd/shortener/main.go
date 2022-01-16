@@ -36,6 +36,7 @@ func main() {
 }
 func NewRouter(service *shortener.Shortener) chi.Router {
 	r := chi.NewRouter()
+	r.Post("/api/shorten", makeShortenLink(service))
 	r.Post("/", makeShortLink(service))
 	r.Get("/{shortLink}", getLinkByID(service))
 	return r

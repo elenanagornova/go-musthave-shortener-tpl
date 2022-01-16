@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
@@ -52,5 +53,63 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 
 		w.Header().Set("Location", originalLink)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
+}
+
+type ShortenerRequest struct {
+	Url string `json:"url"`
+}
+type ShortenerResponse struct {
+	Result string `json:"result"`
+}
+
+func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		headerContentTtype := r.Header.Get("Content-Type")
+		if headerContentTtype != "application/json" {
+			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Something wrong with request", http.StatusBadRequest)
+			return
+		}
+		defer func() {
+			if err := r.Body.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+		if len(body) == 0 {
+			http.Error(w, "Request body is empty", http.StatusBadRequest)
+			return
+		}
+
+		var originalLink ShortenerRequest
+		err = json.Unmarshal(body, &originalLink)
+		if err != nil {
+			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+			return
+		}
+
+		resultLink, err := service.GenerateShortLink(originalLink.Url)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var responseBody ShortenerResponse
+		responseBody.Result = resultLink
+		respBody, err := json.Marshal(&responseBody)
+		if err != nil {
+			http.Error(w, "Marshalling error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		w.Write(respBody)
 	}
 }
