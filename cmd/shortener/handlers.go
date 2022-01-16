@@ -57,7 +57,7 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 }
 
 type ShortenerRequest struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }
 type ShortenerResponse struct {
 	Result string `json:"result"`
@@ -93,7 +93,7 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resultLink, err := service.GenerateShortLink(originalLink.Url)
+		resultLink, err := service.GenerateShortLink(originalLink.URL)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
