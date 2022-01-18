@@ -45,8 +45,6 @@ type request struct {
 	url, method, contentType, body string
 }
 
-const addr = "http://localhost:8080"
-
 func TestGetPostNegative(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -169,7 +167,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(addr)
+	service := shortener.New("http://localhost:8080")
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
