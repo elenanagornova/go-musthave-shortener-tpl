@@ -10,21 +10,18 @@ import (
 	"os/signal"
 )
 
+var (
+	listen = os.Getenv("SERVER_ADDRESS")
+	addr   = os.Getenv("BASE_URL")
+)
+
 func main() {
 
-	listen, exists := os.LookupEnv("SERVER_ADDRESS")
-	if !exists {
-		log.Fatal("Отсутствует переменная окружения SERVER_ADDRESS")
-	}
 	if listen == "" {
 		log.Fatal("Отсутствует значение переменной окружения SERVER_ADDRESS")
 	}
 
-	addr, exists := os.LookupEnv("BASE_URL")
-	if !exists {
-		log.Fatal("Отсутствует переменная окружения BASE_URL")
-	}
-	if listen == "" {
+	if addr == "" {
 		log.Fatal("Отсутствует значение переменной окружения BASE_URL")
 	}
 
@@ -32,7 +29,6 @@ func main() {
 	defer cancel()
 
 	service := shortener.New(addr)
-
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
 		Addr:    listen,
