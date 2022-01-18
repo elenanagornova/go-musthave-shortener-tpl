@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go-musthave-shortener-tpl/internal/shortener"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"testing"
 )
+
+const BASE_ADDR = "http://localhost:8080/"
 
 func SendTestRequest(t *testing.T, ts *httptest.Server, method, path, contentType string, body io.Reader) (*http.Response, string) {
 	client := &http.Client{
@@ -92,7 +95,7 @@ func TestGetPostNegative(t *testing.T) {
 		},
 	}
 
-	service := shortener.New(addr)
+	service := shortener.New(BASE_ADDR)
 
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
@@ -130,7 +133,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(addr)
+	service := shortener.New(BASE_ADDR)
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -167,7 +170,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New("http://localhost:8080")
+	service := shortener.New(BASE_ADDR)
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -216,17 +219,21 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := shortener.New(addr)
+			service := shortener.New(BASE_ADDR)
 			r := NewRouter(service)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, tt.request.contentType, strings.NewReader(tt.request.body))
+			var originalLink ShortenerResponse
+			if err := json.Unmarshal([]byte(body), &originalLink); err != nil {
+				assert.True(t, false)
+			}
 			defer resp.Body.Close()
 
 			assert.Equal(t, resp.Header.Get("Content-Type"), tt.want.responseContentType)
 			assert.Equal(t, tt.want.responseStatusCode, resp.StatusCode)
 
-			matched, _ := regexp.MatchString(tt.want.responseBody, TrimLastSymbols(body))
+			matched, _ := regexp.MatchString(tt.want.responseBody, originalLink.Result)
 			assert.True(t, matched)
 		})
 	}
