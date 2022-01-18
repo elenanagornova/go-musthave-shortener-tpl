@@ -10,12 +10,24 @@ import (
 	"os/signal"
 )
 
-const (
-	addr   = "http://localhost:8080"
-	listen = ":8080"
-)
-
 func main() {
+
+	listen, exists := os.LookupEnv("SERVER_ADDRESS")
+	if !exists {
+		log.Fatal("Отсутствует переменная окружения SERVER_ADDRESS")
+	}
+	if listen == "" {
+		log.Fatal("Отсутствует значение переменной окружения SERVER_ADDRESS")
+	}
+
+	addr, exists := os.LookupEnv("BASE_URL")
+	if !exists {
+		log.Fatal("Отсутствует переменная окружения BASE_URL")
+	}
+	if listen == "" {
+		log.Fatal("Отсутствует значение переменной окружения BASE_URL")
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
