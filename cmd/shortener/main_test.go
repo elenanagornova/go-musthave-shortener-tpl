@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-const BASE_ADDR = "http://localhost:8080/"
+const BaseAddr = "http://localhost:8080/"
 
 func SendTestRequest(t *testing.T, ts *httptest.Server, method, path, contentType string, body io.Reader) (*http.Response, string) {
 	client := &http.Client{
@@ -95,7 +95,7 @@ func TestGetPostNegative(t *testing.T) {
 		},
 	}
 
-	service := shortener.New(BASE_ADDR)
+	service := shortener.New(BaseAddr)
 
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
@@ -133,7 +133,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(BASE_ADDR)
+	service := shortener.New(BaseAddr)
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -170,7 +170,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(BASE_ADDR)
+	service := shortener.New(BaseAddr)
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -219,7 +219,7 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := shortener.New(BASE_ADDR)
+			service := shortener.New(BaseAddr)
 			r := NewRouter(service)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
