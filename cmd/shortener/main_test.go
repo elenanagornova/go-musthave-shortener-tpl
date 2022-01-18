@@ -45,6 +45,8 @@ type request struct {
 	url, method, contentType, body string
 }
 
+const addr = "http://localhost:8080"
+
 func TestGetPostNegative(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -213,13 +215,13 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(addr)
-	r := NewRouter(service)
-	ts := httptest.NewServer(r)
-	defer ts.Close()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			service := shortener.New(addr)
+			r := NewRouter(service)
+			ts := httptest.NewServer(r)
+			defer ts.Close()
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, tt.request.contentType, strings.NewReader(tt.request.body))
 			defer resp.Body.Close()
 
@@ -312,5 +314,5 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 	}
 }
 func TrimLastSymbols(str string) string {
-	return strings.TrimRight(string(str), "\n")
+	return strings.TrimRight(str, "\n")
 }
