@@ -18,11 +18,11 @@ var (
 func main() {
 
 	if listen == "" {
-		log.Fatal("Отсутствует значение переменной окружения SERVER_ADDRESS")
+		listen = ":8080"
 	}
 
 	if addr == "" {
-		log.Fatal("Отсутствует значение переменной окружения BASE_URL")
+		addr = "http://localhost:8080/"
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
