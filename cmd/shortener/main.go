@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
+	"go-musthave-shortener-tpl/internal/helpers"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
@@ -11,24 +12,21 @@ import (
 )
 
 var (
-	listen = os.Getenv("SERVER_ADDRESS")
-	addr   = os.Getenv("BASE_URL")
+	listen          = helpers.GetEnvOrDefault("SERVER_ADDRESS", ":8080")
+	addr            = helpers.GetEnvOrDefault("BASE_URL", "http://localhost:8080/")
+	fileStoragePath = helpers.GetEnvOrDefault("FILE_STORAGE_PATH", "links.log")
 )
 
 func main() {
-
-	if listen == "" {
-		listen = ":8080"
-	}
-
-	if addr == "" {
-		addr = "http://localhost:8080/"
-	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
 	service := shortener.New(addr)
+	err := service.Restore(fileStoragePath)
+	if err != nil {
+		log.Printf("Can't restore data from file")
+	}
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
 		Addr:    listen,
@@ -36,6 +34,10 @@ func main() {
 	}
 	go func() {
 		<-ctx.Done()
+		err := service.Save(fileStoragePath)
+		if err != nil {
+			log.Printf("Can't save data in file")
+		}
 		srv.Close()
 	}()
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
