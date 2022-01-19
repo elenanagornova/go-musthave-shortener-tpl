@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"github.com/go-chi/chi/v5"
-	"go-musthave-shortener-tpl/internal/helpers"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
@@ -13,29 +13,50 @@ import (
 )
 
 var (
-	listen          = helpers.GetEnvOrDefault("SERVER_ADDRESS", ":8080")
-	addr            = helpers.GetEnvOrDefault("BASE_URL", "http://localhost:8080/")
-	fileStoragePath = helpers.GetEnvOrDefault("FILE_STORAGE_PATH", "links.log")
+	listen          *string
+	addr            *string
+	fileStoragePath *string
 )
 
-func main() {
+func init() {
+	if listenFromEnv := os.Getenv("SERVER_ADDRESS"); listenFromEnv != "" {
+		listen = &listenFromEnv
+	} else {
+		listen = flag.String("a", ":8080", "Server address")
+	}
 
+	if addrFromEnv := os.Getenv("BASE_URL"); addrFromEnv != "" {
+		addr = &addrFromEnv
+	} else {
+		addr = flag.String("b", "http://localhost:8080/", "Server base URL")
+	}
+
+	if fileStoragePathFromEnv := os.Getenv("FILE_STORAGE_PATH"); fileStoragePathFromEnv != "" {
+		fileStoragePath = &fileStoragePathFromEnv
+	} else {
+		fileStoragePath = flag.String("f", "links.log", "File storage path")
+	}
+
+}
+
+func main() {
+	flag.Parse()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	service := shortener.New(addr)
-	err := service.Restore(fileStoragePath)
+	service := shortener.New(*addr)
+	err := service.Restore(*fileStoragePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Printf("Can't restore data from file: %s", err.Error())
 	}
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
-		Addr:    listen,
+		Addr:    *listen,
 		Handler: NewRouter(service),
 	}
 	go func() {
 		<-ctx.Done()
-		err := service.Save(fileStoragePath)
+		err := service.Save(*fileStoragePath)
 		if err != nil {
 			log.Printf("Can't save data in file")
 		}
