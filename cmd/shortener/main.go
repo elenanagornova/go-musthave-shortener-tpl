@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"go-musthave-shortener-tpl/internal/helpers"
 	"go-musthave-shortener-tpl/internal/shortener"
@@ -24,8 +25,8 @@ func main() {
 
 	service := shortener.New(addr)
 	err := service.Restore(fileStoragePath)
-	if err != nil {
-		log.Printf("Can't restore data from file")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Printf("Can't restore data from file: %s", err.Error())
 	}
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
