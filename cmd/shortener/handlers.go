@@ -91,9 +91,8 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 
 		var responseBody ShortenerResponse
 		responseBody.Result = resultLink
-
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(201)
+		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return

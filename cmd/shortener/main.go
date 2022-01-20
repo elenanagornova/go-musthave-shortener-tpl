@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
@@ -18,8 +19,7 @@ var (
 	fileStoragePath string
 )
 
-func init() {
-
+func main() {
 	if listen = os.Getenv("SERVER_ADDRESS"); listen == "" {
 		flag.StringVar(&listen, "a", ":8080", "Server address")
 	}
@@ -32,17 +32,15 @@ func init() {
 		flag.StringVar(&fileStoragePath, "f", "links.log", "File storage path")
 	}
 
-}
-
-func main() {
 	flag.Parse()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
 	service := shortener.New(addr)
 	err := service.Restore(fileStoragePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Printf("Can't restore data from file: %s", err.Error())
+		panic(fmt.Sprintf("Can't restore data from file: %s", err.Error()))
 	}
 	log.Println("Starting server at port 8080")
 	srv := http.Server{
