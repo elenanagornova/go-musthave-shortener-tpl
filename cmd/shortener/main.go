@@ -83,6 +83,7 @@ func commonMiddleware(next http.Handler) http.Handler {
 		body, err := gzip.NewReader(r.Body)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			panic(fmt.Sprintf(err.Error()))
+			return
 		}
 		r.Body = body
 
