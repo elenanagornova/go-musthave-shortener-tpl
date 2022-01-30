@@ -1,20 +1,18 @@
 package main
 
 import (
-	"compress/gzip"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/shortener"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 )
 
 var (
@@ -66,43 +64,12 @@ func main() {
 func NewRouter(service *shortener.Shortener) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(commonMiddleware)
+
+	r.Use(middleware.Compress(5))
+	r.Use(controller.GzipDecompressor)
 
 	r.Post("/api/shorten", makeShortenLink(service))
 	r.Post("/", makeShortLink(service))
 	r.Get("/{shortLink}", getLinkByID(service))
 	return r
-}
-func commonMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Content-Type"), "gzip") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		body, err := gzip.NewReader(r.Body)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			panic(fmt.Sprintf(err.Error()))
-			return
-		}
-		r.Body = body
-
-		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil {
-			io.WriteString(w, err.Error())
-			return
-		}
-		defer gz.Close()
-		w.Header().Set("Accept-Encoding", "gzip")
-		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
-	})
-}
-
-type gzipWriter struct {
-	http.ResponseWriter
-	Writer io.Writer
-}
-
-func (w gzipWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
 }
