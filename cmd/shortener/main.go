@@ -85,7 +85,7 @@ func commonMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		defer gz.Close()
-
+		w.Header().Del("Content-Encoding")
 		w.Header().Set("Content-Encoding", "gzip")
 		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})
