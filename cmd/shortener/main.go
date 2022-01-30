@@ -1,11 +1,13 @@
 package main
 
 import (
+	"compress/flate"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
@@ -61,6 +63,11 @@ func main() {
 }
 func NewRouter(service *shortener.Shortener) chi.Router {
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
+	compressor := middleware.NewCompressor(flate.DefaultCompression)
+	r.Use(compressor.Handler)
+
 	r.Post("/api/shorten", makeShortenLink(service))
 	r.Post("/", makeShortLink(service))
 	r.Get("/{shortLink}", getLinkByID(service))
