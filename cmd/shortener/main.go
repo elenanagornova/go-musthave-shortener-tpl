@@ -75,10 +75,17 @@ func NewRouter(service *shortener.Shortener) chi.Router {
 }
 func commonMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		if !strings.Contains(r.Header.Get("Content-Type"), "gzip") {
 			next.ServeHTTP(w, r)
 			return
 		}
+
+		body, err := gzip.NewReader(r.Body)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			panic(fmt.Sprintf(err.Error()))
+		}
+		r.Body = body
+
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
 			io.WriteString(w, err.Error())
