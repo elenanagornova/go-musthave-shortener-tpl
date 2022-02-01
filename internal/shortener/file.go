@@ -11,7 +11,7 @@ func (s *Shortener) Restore(file string) error {
 		return err
 	}
 	defer fp.Close()
-	return json.NewDecoder(fp).Decode(&s.linksMap)
+	return json.NewDecoder(fp).Decode(&s.userLinks)
 }
 
 func (s *Shortener) Save(file string) error {
@@ -20,5 +20,5 @@ func (s *Shortener) Save(file string) error {
 		return err
 	}
 	defer fp.Close()
-	return json.NewEncoder(fp).Encode(s.linksMap)
+	return json.NewEncoder(fp).Encode(s.userLinks)
 }

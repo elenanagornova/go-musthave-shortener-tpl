@@ -62,14 +62,17 @@ func main() {
 	}
 }
 func NewRouter(service *shortener.Shortener) chi.Router {
+	h := NewHandlers()
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
 	r.Use(middleware.Compress(5))
 	r.Use(controller.GzipDecompressor)
+	r.Use(h.UserMiddleware)
 
-	r.Post("/api/shorten", makeShortenLink(service))
-	r.Post("/", makeShortLink(service))
-	r.Get("/{shortLink}", getLinkByID(service))
+	r.Post("/api/shorten", h.makeShortenLink(service))
+	r.Post("/", h.makeShortLink(service))
+	r.Get("/{shortLink}", h.getLinkByID(service))
+	r.Get("/user/urls", h.getUserLinks(service))
 	return r
 }

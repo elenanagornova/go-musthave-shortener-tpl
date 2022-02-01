@@ -8,18 +8,22 @@ import (
 )
 
 // GenerateShortLink from full link
-func (s *Shortener) GenerateShortLink(originalURL string) (string, error) {
-	id := s.generateRandomString(5)
-	s.linksMap[id] = originalURL
+func (s *Shortener) GenerateShortLink(originalURL string, userId string) (string, error) {
+	id := GenerateRandomString(5)
+
 	u, err := url.Parse(s.addr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse url: %w", err)
 	}
 	u.Path = id
+	if _, exist := s.userLinks[userId]; !exist {
+		s.userLinks[userId] = []UserLinks{}
+	}
+	s.userLinks[userId] = append(s.userLinks[userId], UserLinks{ShortURL: id, OriginalURL: originalURL})
 	return u.String(), nil
 }
 
-func (s *Shortener) generateRandomString(n int) string {
+func GenerateRandomString(n int) string {
 	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := ""
 	randSrc := rand.NewSource(time.Now().UnixNano())
@@ -29,3 +33,18 @@ func (s *Shortener) generateRandomString(n int) string {
 	}
 	return result
 }
+
+//// GenerateShortLink from full link
+//func (s *Shortener) GenerateShortLink(OriginalURL string, userId string) (string, error) {
+//	id := s.GenerateRandomString(5)
+//	u, err := url.Parse(s.addr)
+//	if err != nil {
+//		return "", fmt.Errorf("failed to parse url: %w", err)
+//	}
+//	u.Path = id
+//	if _, exist := s.userLinks[userId]; !exist {
+//		s.userLinks[userId] = []UserLinks{}
+//	}
+//	s.userLinks[userId] = append(s.userLinks[userId], UserLinks{ShortURL: id, OriginalURL: OriginalURL})
+//	return u.String(), nil
+//}
