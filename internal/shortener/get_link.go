@@ -7,17 +7,16 @@ var (
 )
 
 // GetLink returns full link by short link
-func (s *Shortener) GetLink(url string, userId string) (string, error) {
-	link, ok := s.userLinks[userId]
-	if !ok {
-		return "", fmt.Errorf("link not found")
-	}
+func (s *Shortener) GetLink(url string) (string, error) {
+	link := s.userLinks
+
 	for _, links := range link {
-		if links.ShortURL == url {
-			return links.OriginalURL, nil
+		for _, link := range links {
+			if link.ShortURL == url {
+				return link.OriginalURL, nil
+			}
 		}
 	}
-
 	return "", ErrLinkNotFound
 }
 
