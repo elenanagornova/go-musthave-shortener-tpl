@@ -90,7 +90,7 @@ func TestGetPostNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusBadRequest,
 				responseParams:     nil,
-				responseBody:       "Request body is empty",
+				responseBody:       "Something wrong with request",
 			},
 		},
 	}
@@ -124,7 +124,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			request: request{
 				url:    "/",
 				method: http.MethodPost,
-				body:   "http://yandex.ru",
+				body:   "{\"url\":\"http://n9o1ira2r927q.net/jfwdrxbz1\"}",
 			},
 			want: want{
 				responseStatusCode: http.StatusCreated,
@@ -160,7 +160,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 	}{
 		{
 			name:        "positive test #1. GET link",
-			originalURL: "http://yandex.ru",
+			originalURL: "{\"url\":\"http://yandex.ru\"}",
 			request: request{
 				url:    "/",
 				method: http.MethodGet,

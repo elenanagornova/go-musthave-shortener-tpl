@@ -3,16 +3,29 @@ package main
 import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"go-musthave-shortener-tpl/internal/controller"
+	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
-	"io"
 	"log"
 	"net/http"
 )
 
+type ShortenerRequest struct {
+	URL string `json:"url"`
+}
+type ShortenerResponse struct {
+	Result string `json:"result"`
+}
+
 func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
+		req := struct {
+			URL string `json:"url"`
+		}{}
+		userUId := controller.UserUIDFromRequest(r)
+		hellpers.SetUIDCookie(w, userUId)
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Something wrong with request", http.StatusBadRequest)
 			return
 		}
@@ -21,12 +34,8 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 				log.Println(err)
 			}
 		}()
-		if len(body) == 0 {
-			http.Error(w, "Request body is empty", http.StatusBadRequest)
-			return
-		}
 
-		resultLink, err := service.GenerateShortLink(string(body))
+		resultLink, err := service.GenerateShortLink(req.URL, userUId)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -40,12 +49,16 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 
 func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		userUId := controller.UserUIDFromRequest(r)
+		hellpers.SetUIDCookie(w, userUId)
+
 		shortLink := chi.URLParam(r, "shortLink")
 		if len(shortLink) == 0 {
 			http.Error(w, "Empty required param shortLink", http.StatusBadRequest)
 		}
 
-		originalLink, err := service.GetLink(shortLink)
+		originalLink, err := service.GetLink(shortLink, userUId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -56,15 +69,10 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	}
 }
 
-type ShortenerRequest struct {
-	URL string `json:"url"`
-}
-type ShortenerResponse struct {
-	Result string `json:"result"`
-}
-
 func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userUId := controller.UserUIDFromRequest(r)
+		hellpers.SetUIDCookie(w, userUId)
 		headerContentTtype := r.Header.Get("Content-Type")
 		if headerContentTtype != "application/json" {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
@@ -82,7 +90,7 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resultLink, err := service.GenerateShortLink(originalLink.URL)
+		resultLink, err := service.GenerateShortLink(originalLink.URL, userUId)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -94,6 +102,17 @@ func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
+			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+			return
+		}
+	}
+}
+
+func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userId := controller.UserUIDFromRequest(r)
+		links := service.GetLinks(userId)
+		if err := json.NewEncoder(w).Encode(links); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
 		}

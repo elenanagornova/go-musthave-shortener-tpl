@@ -8,18 +8,22 @@ import (
 )
 
 // GenerateShortLink from full link
-func (s *Shortener) GenerateShortLink(originalURL string) (string, error) {
-	id := s.generateRandomString(5)
-	s.linksMap[id] = originalURL
+func (s *Shortener) GenerateShortLink(originalURL string, userUId string) (string, error) {
+	id := GenerateRandomString(5)
+
 	u, err := url.Parse(s.addr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse url: %w", err)
 	}
 	u.Path = id
+	if _, exist := s.userLinks[userUId]; !exist {
+		s.userLinks[userUId] = []UserLinks{}
+	}
+	s.userLinks[userUId] = append(s.userLinks[userUId], UserLinks{ShortURL: id, OriginalURL: originalURL})
 	return u.String(), nil
 }
 
-func (s *Shortener) generateRandomString(n int) string {
+func GenerateRandomString(n int) string {
 	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := ""
 	randSrc := rand.NewSource(time.Now().UnixNano())
