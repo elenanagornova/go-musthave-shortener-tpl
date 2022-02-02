@@ -90,7 +90,7 @@ func TestGetPostNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusBadRequest,
 				responseParams:     nil,
-				responseBody:       "Something wrong with request",
+				responseBody:       "Request body is empty",
 			},
 		},
 	}

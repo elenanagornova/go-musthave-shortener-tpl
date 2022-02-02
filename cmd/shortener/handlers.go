@@ -32,7 +32,10 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 				log.Println(err)
 			}
 		}()
-
+		if len(body) == 0 {
+			http.Error(w, "Request body is empty", http.StatusBadRequest)
+			return
+		}
 		resultLink, err := service.GenerateShortLink(string(body), userUID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
