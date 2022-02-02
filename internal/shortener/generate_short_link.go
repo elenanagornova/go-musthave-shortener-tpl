@@ -19,7 +19,7 @@ func (s *Shortener) GenerateShortLink(originalURL string, userUID string) (strin
 	if _, exist := s.userLinks[userUID]; !exist {
 		s.userLinks[userUID] = []UserLinks{}
 	}
-	s.userLinks[userUID] = append(s.userLinks[userUID], UserLinks{ShortURL: id, OriginalURL: originalURL})
+	s.userLinks[userUID] = append(s.userLinks[userUID], UserLinks{ShortURL: u.String(), OriginalURL: originalURL})
 	return u.String(), nil
 }
 
