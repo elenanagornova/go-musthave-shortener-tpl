@@ -6,6 +6,7 @@ import (
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
+	"io"
 	"log"
 	"net/http"
 )
@@ -19,16 +20,12 @@ type ShortenerResponse struct {
 
 func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := struct {
-			URL string `json:"url"`
-		}{}
 		userUId := hellpers.GetUID(r.Cookies())
 
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			if err != nil {
-				http.Error(w, "Something wrong with request", http.StatusBadRequest)
-				return
-			}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Something wrong with request", http.StatusBadRequest)
+			return
 		}
 		defer func() {
 			if err := r.Body.Close(); err != nil {
@@ -36,7 +33,7 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			}
 		}()
 
-		resultLink, err := service.GenerateShortLink(req.URL, userUId)
+		resultLink, err := service.GenerateShortLink(string(body), userUId)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
