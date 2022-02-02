@@ -111,6 +111,10 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUID := controller.UserUIDFromRequest(r)
 		links := service.GetLinks(userUID)
+		var fullLinks []shortener.UserLinks
+		for _, link := range links {
+			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: addr + "/" + link.ShortURL, OriginalURL: link.OriginalURL})
+		}
 		if len(links) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -119,7 +123,7 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(links); err != nil {
+		if err := json.NewEncoder(w).Encode(fullLinks); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
 		}
