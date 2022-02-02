@@ -113,7 +113,7 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 		links := service.GetLinks(userUID)
 		var fullLinks []shortener.UserLinks
 		for _, link := range links {
-			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: addr + "/" + link.ShortURL, OriginalURL: link.OriginalURL})
+			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: addr + link.ShortURL, OriginalURL: link.OriginalURL})
 		}
 		if len(links) == 0 {
 			w.WriteHeader(http.StatusNoContent)
