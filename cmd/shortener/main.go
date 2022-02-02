@@ -69,7 +69,7 @@ func NewRouter(service *shortener.Shortener) chi.Router {
 	r.Use(controller.GzipDecompressor)
 	r.Use(controller.UserMiddleware)
 
-	r.Post("/api/shorten", makeShortenLink(service))
+	r.Post("/api/shorten", makeShortLinkJSON(service))
 	r.Post("/", makeShortLink(service))
 	r.Get("/{shortLink}", getLinkByID(service))
 	r.Get("/user/urls", getUserLinks(service))

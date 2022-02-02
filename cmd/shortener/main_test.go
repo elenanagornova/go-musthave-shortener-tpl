@@ -124,7 +124,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			request: request{
 				url:    "/",
 				method: http.MethodPost,
-				body:   "{\"url\":\"http://n9o1ira2r927q.net/jfwdrxbz1\"}",
+				body:   "http://n9o1ira2r927q.net/jfwdrxbz1",
 			},
 			want: want{
 				responseStatusCode: http.StatusCreated,
@@ -160,7 +160,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 	}{
 		{
 			name:        "positive test #1. GET link",
-			originalURL: "{\"url\":\"http://yandex.ru\"}",
+			originalURL: "http://yandex.ru",
 			request: request{
 				url:    "/",
 				method: http.MethodGet,

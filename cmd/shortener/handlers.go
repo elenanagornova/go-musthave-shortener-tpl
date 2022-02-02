@@ -66,7 +66,7 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	}
 }
 
-func makeShortenLink(service *shortener.Shortener) http.HandlerFunc {
+func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUId := controller.UserUIDFromRequest(r)
 		headerContentTtype := r.Header.Get("Content-Type")
