@@ -111,6 +111,10 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUID := controller.UserUIDFromRequest(r)
 		links := service.GetLinks(userUID)
+		if len(links) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		if err := json.NewEncoder(w).Encode(links); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
