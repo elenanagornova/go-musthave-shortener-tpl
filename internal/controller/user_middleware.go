@@ -18,7 +18,7 @@ func UserMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func UserUIDFromRequest(r *http.Request) string {
+func userUIDFromRequest(r *http.Request) string {
 	uid := r.Context().Value(UserCtxKey)
 	if uid == nil {
 		return ""

@@ -20,7 +20,7 @@ type ShortenerResponse struct {
 
 func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUId := hellpers.GetUID(r.Cookies())
+		userUID := hellpers.GetUID(r.Cookies())
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -33,13 +33,13 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			}
 		}()
 
-		resultLink, err := service.GenerateShortLink(string(body), userUId)
+		resultLink, err := service.GenerateShortLink(string(body), userUID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		hellpers.SetUIDCookie(w, userUId)
+		hellpers.SetUIDCookie(w, userUID)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(resultLink))
 	}
@@ -48,19 +48,19 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		userUId := controller.UserUIDFromRequest(r)
+		userUID := controller.userUIDFromRequest(r)
 
 		shortLink := chi.URLParam(r, "shortLink")
 		if len(shortLink) == 0 {
 			http.Error(w, "Empty required param shortLink", http.StatusBadRequest)
 		}
 
-		originalLink, err := service.GetLink(shortLink, userUId)
+		originalLink, err := service.GetLink(shortLink, userUID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		hellpers.SetUIDCookie(w, userUId)
+		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Location", originalLink)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
@@ -68,7 +68,7 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 
 func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUId := controller.UserUIDFromRequest(r)
+		userUID := controller.userUIDFromRequest(r)
 		headerContentTtype := r.Header.Get("Content-Type")
 		if headerContentTtype != "application/json" {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
@@ -86,7 +86,7 @@ func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resultLink, err := service.GenerateShortLink(originalLink.URL, userUId)
+		resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -96,7 +96,7 @@ func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 		var responseBody ShortenerResponse
 		responseBody.Result = resultLink
 
-		hellpers.SetUIDCookie(w, userUId)
+		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
@@ -108,7 +108,7 @@ func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 
 func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUID := controller.UserUIDFromRequest(r)
+		userUID := controller.userUIDFromRequest(r)
 		links := service.GetLinks(userUID)
 		if err := json.NewEncoder(w).Encode(links); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
