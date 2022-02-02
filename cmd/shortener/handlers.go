@@ -6,6 +6,7 @@ import (
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
+	"io"
 	"log"
 	"net/http"
 )
@@ -26,8 +27,12 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 		hellpers.SetUIDCookie(w, userUId)
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Something wrong with request", http.StatusBadRequest)
-			return
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "Something wrong with request", http.StatusBadRequest)
+				return
+			}
+			req.URL = string(body)
 		}
 		defer func() {
 			if err := r.Body.Close(); err != nil {
