@@ -13,13 +13,9 @@ const UserCtxKey = CtxKey("UserID")
 func UserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userUID := hellpers.GetUID(r.Cookies())
-		next.ServeHTTP(w, userUIDtoRequest(r, userUID))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserCtxKey, userUID)))
 		return
 	})
-}
-
-func userUIDtoRequest(r *http.Request, userUID string) *http.Request {
-	return r.WithContext(context.WithValue(r.Context(), UserCtxKey, userUID))
 }
 
 func UserUIDFromRequest(r *http.Request) string {
