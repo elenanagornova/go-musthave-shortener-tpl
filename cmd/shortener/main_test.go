@@ -77,7 +77,7 @@ func TestGetPostNegative(t *testing.T) {
 			want: want{
 				responseStatusCode: http.StatusNotFound,
 				responseParams:     nil,
-				responseBody:       "link not found",
+				responseBody:       "not found",
 			},
 		},
 		{
