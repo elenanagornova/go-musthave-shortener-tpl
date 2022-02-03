@@ -45,27 +45,10 @@ func NewDBConnect(databaseDSN string) (*DBRepo, error) {
 		panic(fmt.Sprintf("Unable to connect to database: %v\n", err))
 		return nil, err
 	}
-	//defer conn.Close(context.Background())
 
 	pgRepo := DBRepo{
 		conn: conn,
 	}
-	//migration := `
-	//	CREATE SCHEMA IF NOT EXISTS shortener;
-	//	-- DROP SCHEMA shortener CASCADE ;
-	//	-- CREATE SCHEMA shortener;
-	//	SET SEARCH_PATH TO shortener;
-	//
-	//	CREATE TABLE IF NOT EXISTS links(
-	//		  id           serial primary key,
-	//          short_link      varchar,
-	//          original_link varchar,
-	//          user_uid          varchar
-	//	);
-	//	ALTER TABLE links ALTER COLUMN created_at SET DEFAULT now();
-	//	ALTER TABLE links ALTER COLUMN removed SET DEFAULT false;
-	//	CREATE UNIQUE INDEX IF NOT EXISTS original_url_idx ON links USING btree (original_url);
-	//	`
 
 	m, err := RunMigration(databaseDSN)
 	if err != nil && !m {
