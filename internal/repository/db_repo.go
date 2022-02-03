@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -42,7 +41,6 @@ func (D *DBRepo) Close() {
 func NewDBConnect(databaseDSN string) (*DBRepo, error) {
 	conn, err := pgx.Connect(context.Background(), databaseDSN)
 	if err != nil {
-		panic(fmt.Sprintf("Unable to connect to database: %v\n", err))
 		return nil, err
 	}
 
