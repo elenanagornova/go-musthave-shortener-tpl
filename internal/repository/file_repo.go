@@ -28,7 +28,7 @@ func (F FRepo) GetLinksByuserUID(userUID string) []UserLinks {
 }
 
 func (F FRepo) Ping() error {
-	panic("implement me")
+	return nil
 }
 
 func (F FRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
