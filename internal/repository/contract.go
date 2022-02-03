@@ -5,9 +5,9 @@ type Storager interface {
 
 	SaveLinks(shortLink string, originalLink string, userUID string) error
 
-	CreateUser(userUid string) error
+	CreateUser(userUID string) error
 
-	GetLinksByUserUID(userUid string) []UserLinks
+	GetLinksByuserUID(userUID string) []UserLinks
 
 	Ping() error
 

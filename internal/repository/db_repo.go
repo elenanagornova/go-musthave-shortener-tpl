@@ -23,11 +23,11 @@ func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string
 	return err
 }
 
-func (D *DBRepo) CreateUser(userUid string) error {
+func (D *DBRepo) CreateUser(userUID string) error {
 	panic("implement me")
 }
 
-func (D *DBRepo) GetLinksByUserUID(userUid string) []UserLinks {
+func (D *DBRepo) GetLinksByuserUID(userUID string) []UserLinks {
 	panic("implement me")
 }
 

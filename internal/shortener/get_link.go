@@ -8,7 +8,7 @@ func (s *Shortener) GetLink(url string) (string, error) {
 }
 
 func (s *Shortener) GetLinks(userUID string) []repository.UserLinks {
-	return s.Repo.GetLinksByUserUID(userUID)
+	return s.Repo.GetLinksByuserUID(userUID)
 }
 
 func (s *Shortener) GetOriginalByShort(shortLink string) (string, error) {

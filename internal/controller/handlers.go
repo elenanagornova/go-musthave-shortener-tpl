@@ -69,7 +69,7 @@ func GetLinkByID(service *shortener.Shortener) http.HandlerFunc {
 
 func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUID := UserUIDFromRequest(r)
+		userUID := userUIDFromRequest(r)
 		headerContentTtype := r.Header.Get("Content-Type")
 		if headerContentTtype != "application/json" {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
@@ -109,7 +109,7 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 
 func GetUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUID := UserUIDFromRequest(r)
+		userUID := userUIDFromRequest(r)
 		links := service.GetLinks(userUID)
 		var fullLinks []repository.UserLinks
 		for _, link := range links {

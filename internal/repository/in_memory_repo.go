@@ -17,8 +17,8 @@ func (M MRepo) FinalSave() error {
 	return nil
 }
 
-func (M MRepo) GetLinksByUserUID(userUid string) []UserLinks {
-	links, ok := M.userLinks[userUid]
+func (M MRepo) GetLinksByuserUID(userUID string) []UserLinks {
+	links, ok := M.userLinks[userUID]
 	if !ok {
 		return []UserLinks{}
 	}
@@ -51,7 +51,7 @@ func (M MRepo) SaveLinks(shortLink string, originalLink string, userUID string) 
 	return nil
 }
 
-func (M MRepo) CreateUser(userUid string) error {
+func (M MRepo) CreateUser(userUID string) error {
 	panic("implement me")
 }
 

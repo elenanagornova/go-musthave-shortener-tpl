@@ -19,8 +19,8 @@ func (F FRepo) FinalSave() error {
 	return json.NewEncoder(fp).Encode(F.userLinks)
 }
 
-func (F FRepo) GetLinksByUserUID(userUid string) []UserLinks {
-	links, ok := F.userLinks[userUid]
+func (F FRepo) GetLinksByuserUID(userUID string) []UserLinks {
+	links, ok := F.userLinks[userUID]
 	if !ok {
 		return []UserLinks{}
 	}
@@ -53,7 +53,7 @@ func (F FRepo) SaveLinks(shortLink string, originalLink string, userUID string) 
 	return nil
 }
 
-func (F FRepo) CreateUser(userUid string) error {
+func (F FRepo) CreateUser(userUID string) error {
 	panic("implement me")
 }
 func (FRepo) Close() {
