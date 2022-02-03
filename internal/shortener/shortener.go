@@ -4,17 +4,17 @@ import "github.com/jackc/pgx/v4"
 
 // Shortener service for shortener links
 type Shortener struct {
-	DbConn    *pgx.Conn
+	DBConn    *pgx.Conn
 	linksMap  map[string]string
 	addr      string
 	userLinks map[string][]UserLinks
 }
 
 // New shortener instance
-func New(addr string, dbConn *pgx.Conn) *Shortener {
+func New(addr string, DBConn *pgx.Conn) *Shortener {
 	return &Shortener{
 		addr:      addr,
-		DbConn:    dbConn,
+		DBConn:    DBConn,
 		linksMap:  make(map[string]string),
 		userLinks: map[string][]UserLinks{},
 	}

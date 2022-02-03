@@ -134,7 +134,7 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 func checkPing(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// обратиться к бд
-		if service.DbConn.Ping(context.Background()) != nil {
+		if service.DBConn.Ping(context.Background()) != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
