@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"go-musthave-shortener-tpl/internal/hellpers"
+	"go-musthave-shortener-tpl/internal/repository"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
 	"log"
@@ -110,9 +111,9 @@ func GetUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUID := UserUIDFromRequest(r)
 		links := service.GetLinks(userUID)
-		var fullLinks []shortener.UserLinks
+		var fullLinks []repository.UserLinks
 		for _, link := range links {
-			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: service.Addr + link.ShortURL, OriginalURL: link.OriginalURL})
+			fullLinks = append(fullLinks, repository.UserLinks{ShortURL: service.Addr + link.ShortURL, OriginalURL: link.OriginalURL})
 		}
 		if len(links) == 0 {
 			w.WriteHeader(http.StatusNoContent)

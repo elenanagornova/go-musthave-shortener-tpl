@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	config "go-musthave-shortener-tpl/internal/config"
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/repository"
-	"go-musthave-shortener-tpl/internal/shortener"
+	shortener "go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
 	"os"
@@ -19,58 +18,29 @@ import (
 var (
 	listen          string
 	Addr            string
-	fileStoragePath string
+	FileStoragePath string
 	DatabaseDSN     string
 )
 
 func main() {
-	if listen = os.Getenv("SERVER_ADDRESS"); listen == "" {
-		flag.StringVar(&listen, "a", ":8080", "Server address")
-	}
-
-	if Addr = os.Getenv("BASE_URL"); Addr == "" {
-		flag.StringVar(&Addr, "b", "http://localhost:8080/", "Server base URL")
-	}
-
-	if fileStoragePath = os.Getenv("FILE_STORAGE_PATH"); fileStoragePath == "" {
-		flag.StringVar(&fileStoragePath, "f", "links.log", "File storage path")
-	}
-
-	if DatabaseDSN = os.Getenv("DATABASE_DSN"); DatabaseDSN == "" {
-		flag.StringVar(&DatabaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb", "")
-	}
-	flag.Parse()
-
+	cfg := config.LoadConfiguration()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	conn, err := repository.CreateDBConnect(DatabaseDSN)
+	repository, err := repository.NewRepository(cfg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		panic(fmt.Sprintf("Can't create repository: %s", err.Error()))
 	}
-	defer conn.Close(context.Background())
-
-	m, err := repository.RunMigration(DatabaseDSN)
-	if err != nil && !m {
-		fmt.Fprintf(os.Stderr, "Unable to create migration: %v\n", err)
-		return
-	}
-
-	service := shortener.New(Addr, conn)
-	err = service.Restore(fileStoragePath)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		panic(fmt.Sprintf("Can't restore data from file: %s", err.Error()))
-	}
+	service := shortener.New(cfg.Addr, repository)
 	log.Println("Starting server at port 8080")
 
 	srv := http.Server{
-		Addr:    listen,
+		Addr:    cfg.Listen,
 		Handler: NewRouter(service),
 	}
 	go func() {
 		<-ctx.Done()
-		err := service.Save(fileStoragePath)
+		err := service.Repo.FinalSave()
 		if err != nil {
 			log.Printf("Can't save data in file")
 		}

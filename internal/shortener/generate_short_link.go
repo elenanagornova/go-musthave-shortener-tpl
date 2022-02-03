@@ -16,10 +16,9 @@ func (s *Shortener) GenerateShortLink(originalURL string, userUID string) (strin
 		return "", fmt.Errorf("failed to parse url: %w", err)
 	}
 	u.Path = id
-	if _, exist := s.userLinks[userUID]; !exist {
-		s.userLinks[userUID] = []UserLinks{}
+	if err := s.Repo.SaveLinks(id, originalURL, userUID); err != nil {
+		return "", err
 	}
-	s.userLinks[userUID] = append(s.userLinks[userUID], UserLinks{ShortURL: id, OriginalURL: originalURL})
 	return u.String(), nil
 }
 

@@ -1,15 +1,16 @@
 package repository
 
 import (
-	"context"
-	"github.com/jackc/pgx/v4"
+	"go-musthave-shortener-tpl/internal/config"
 )
 
-func CreateDBConnect(databaseDSN string) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.Background(), databaseDSN)
-	if err != nil {
-		return nil, err
+func NewRepository(cfg *config.ShortenerConfiguration) (Storager, error) {
+	switch {
+	case cfg.DatabaseDSN != "":
+		return NewDBConnect(cfg.DatabaseDSN)
+	case cfg.FileStoragePath != "":
+		return NewFileConnect(cfg.FileStoragePath), nil
+	default:
+		return NewInMemoryConnect(), nil
 	}
-	return conn, nil
-
 }
