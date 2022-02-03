@@ -11,8 +11,7 @@ type DBRepo struct {
 }
 
 func (D *DBRepo) FinalSave() error {
-	// do nothing
-	return nil
+	return D.conn.Close(context.Background())
 }
 
 func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
