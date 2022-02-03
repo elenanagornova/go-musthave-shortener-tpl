@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go-musthave-shortener-tpl/internal/config"
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/repository"
 	"go-musthave-shortener-tpl/internal/shortener"
@@ -97,9 +96,8 @@ func TestGetPostNegative(t *testing.T) {
 			},
 		},
 	}
-	cfg := config.LoadConfiguration()
-	repository, _ := repository.NewRepository(cfg)
-	service := shortener.New(testAddr, repository)
+
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
@@ -137,9 +135,8 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
-	cfg := config.LoadConfiguration()
-	repository, _ := repository.NewRepository(cfg)
-	service := shortener.New(testAddr, repository)
+
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -176,9 +173,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	cfg := config.LoadConfiguration()
-	repository, _ := repository.NewRepository(cfg)
-	service := shortener.New(testAddr, repository)
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -227,9 +222,7 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := config.LoadConfiguration()
-			repository, _ := repository.NewRepository(cfg)
-			service := shortener.New(testAddr, repository)
+			service := shortener.New(testAddr, repository.NewInMemoryConnect())
 			r := NewRouter(service)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -312,9 +305,8 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 			},
 		},
 	}
-	cfg := config.LoadConfiguration()
-	repository, _ := repository.NewRepository(cfg)
-	service := shortener.New(testAddr, repository)
+
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
