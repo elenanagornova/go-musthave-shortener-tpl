@@ -31,7 +31,7 @@ func (D *DBRepo) GetLinksByuserUID(userUID string) []UserLinks {
 }
 
 func (D *DBRepo) Ping() error {
-	panic("implement me")
+	return D.conn.Ping(context.Background())
 }
 
 func (D *DBRepo) Close() {
