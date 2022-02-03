@@ -11,7 +11,7 @@ import (
 func (s *Shortener) GenerateShortLink(originalURL string, userUID string) (string, error) {
 	id := GenerateRandomString(5)
 
-	u, err := url.Parse(s.addr)
+	u, err := url.Parse(s.Addr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse url: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
 	"io/ioutil"
@@ -224,7 +225,7 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, tt.request.contentType, strings.NewReader(tt.request.body))
-			var originalLink ShortenerResponse
+			var originalLink controller.ShortenerResponse
 			if err := json.Unmarshal([]byte(body), &originalLink); err != nil {
 				assert.True(t, false)
 			}

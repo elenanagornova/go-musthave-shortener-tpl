@@ -1,10 +1,8 @@
-package main
+package controller
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
-	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
@@ -19,7 +17,7 @@ type ShortenerResponse struct {
 	Result string `json:"result"`
 }
 
-func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
+func MakeShortLink(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUID := hellpers.GetUID(r.Cookies())
 
@@ -49,7 +47,7 @@ func makeShortLink(service *shortener.Shortener) http.HandlerFunc {
 	}
 }
 
-func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
+func GetLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		shortLink := chi.URLParam(r, "shortLink")
@@ -68,9 +66,9 @@ func getLinkByID(service *shortener.Shortener) http.HandlerFunc {
 	}
 }
 
-func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
+func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUID := controller.UserUIDFromRequest(r)
+		userUID := UserUIDFromRequest(r)
 		headerContentTtype := r.Header.Get("Content-Type")
 		if headerContentTtype != "application/json" {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
@@ -108,13 +106,13 @@ func makeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 	}
 }
 
-func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
+func GetUserLinks(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userUID := controller.UserUIDFromRequest(r)
+		userUID := UserUIDFromRequest(r)
 		links := service.GetLinks(userUID)
 		var fullLinks []shortener.UserLinks
 		for _, link := range links {
-			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: addr + link.ShortURL, OriginalURL: link.OriginalURL})
+			fullLinks = append(fullLinks, shortener.UserLinks{ShortURL: service.Addr + link.ShortURL, OriginalURL: link.OriginalURL})
 		}
 		if len(links) == 0 {
 			w.WriteHeader(http.StatusNoContent)
@@ -128,16 +126,5 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
 		}
-	}
-}
-
-func checkPing(service *shortener.Shortener) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// обратиться к бд
-		if service.DBConn.Ping(context.Background()) != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
 }

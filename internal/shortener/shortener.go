@@ -6,14 +6,14 @@ import "github.com/jackc/pgx/v4"
 type Shortener struct {
 	DBConn    *pgx.Conn
 	linksMap  map[string]string
-	addr      string
+	Addr      string
 	userLinks map[string][]UserLinks
 }
 
 // New shortener instance
 func New(addr string, DBConn *pgx.Conn) *Shortener {
 	return &Shortener{
-		addr:      addr,
+		Addr:      addr,
 		DBConn:    DBConn,
 		linksMap:  make(map[string]string),
 		userLinks: map[string][]UserLinks{},

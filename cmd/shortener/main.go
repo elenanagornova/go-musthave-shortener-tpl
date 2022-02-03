@@ -18,9 +18,9 @@ import (
 
 var (
 	listen          string
-	addr            string
+	Addr            string
 	fileStoragePath string
-	databaseDSN     string
+	DatabaseDSN     string
 )
 
 func main() {
@@ -28,26 +28,30 @@ func main() {
 		flag.StringVar(&listen, "a", ":8080", "Server address")
 	}
 
-	if addr = os.Getenv("BASE_URL"); addr == "" {
-		flag.StringVar(&addr, "b", "http://localhost:8080/", "Server base URL")
+	if Addr = os.Getenv("BASE_URL"); Addr == "" {
+		flag.StringVar(&Addr, "b", "http://localhost:8080/", "Server base URL")
 	}
 
 	if fileStoragePath = os.Getenv("FILE_STORAGE_PATH"); fileStoragePath == "" {
 		flag.StringVar(&fileStoragePath, "f", "links.log", "File storage path")
 	}
 
-	if databaseDSN = os.Getenv("DATABASE_DSN"); databaseDSN == "" {
-		flag.StringVar(&databaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb", "")
+	if DatabaseDSN = os.Getenv("DATABASE_DSN"); DatabaseDSN == "" {
+		flag.StringVar(&DatabaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb", "")
 	}
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	conn, err := repository.CreateDBConnect(databaseDSN)
+	conn, err := repository.CreateDBConnect(DatabaseDSN)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
 	defer conn.Close(context.Background())
 
-	service := shortener.New(addr, conn)
+	service := shortener.New(Addr, conn)
 	err = service.Restore(fileStoragePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		panic(fmt.Sprintf("Can't restore data from file: %s", err.Error()))
@@ -78,10 +82,10 @@ func NewRouter(service *shortener.Shortener) chi.Router {
 	r.Use(controller.GzipDecompressor)
 	r.Use(controller.UserMiddleware)
 
-	r.Post("/api/shorten", makeShortLinkJSON(service))
-	r.Post("/", makeShortLink(service))
-	r.Get("/{shortLink}", getLinkByID(service))
-	r.Get("/user/urls", getUserLinks(service))
-	r.Get("/ping", checkPing(service))
+	r.Post("/api/shorten", controller.MakeShortLinkJSON(service))
+	r.Post("/", controller.MakeShortLink(service))
+	r.Get("/{shortLink}", controller.GetLinkByID(service))
+	r.Get("/user/urls", controller.GetUserLinks(service))
+	r.Get("/ping", controller.CheckConn(service))
 	return r
 }
