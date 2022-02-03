@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v4"
 	"go-musthave-shortener-tpl/internal/controller"
+	"go-musthave-shortener-tpl/internal/repository"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
@@ -36,21 +36,15 @@ func main() {
 		flag.StringVar(&fileStoragePath, "f", "links.log", "File storage path")
 	}
 
-	// какое должно быть значение по умолчанию???
 	if databaseDSN = os.Getenv("DATABASE_DSN"); databaseDSN == "" {
 		flag.StringVar(&databaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb", "")
 	}
-
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	conn, err := pgx.Connect(context.Background(), databaseDSN)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
+	conn, err := repository.CreateDBConnect(databaseDSN)
 	defer conn.Close(context.Background())
 
 	service := shortener.New(addr, conn)
@@ -59,6 +53,7 @@ func main() {
 		panic(fmt.Sprintf("Can't restore data from file: %s", err.Error()))
 	}
 	log.Println("Starting server at port 8080")
+
 	srv := http.Server{
 		Addr:    listen,
 		Handler: NewRouter(service),

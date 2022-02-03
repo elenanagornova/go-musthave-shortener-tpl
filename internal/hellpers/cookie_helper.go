@@ -12,7 +12,9 @@ import (
 const CookieName = "UID"
 
 var uidLen = 5
-var secret = "mysecret" // Прочитать из env/конфига
+
+// пока что захардкодила
+var secret = "mysecret"
 
 func CalculateHash(uid string) string {
 	hash := hmac.New(sha256.New, []byte(secret))
