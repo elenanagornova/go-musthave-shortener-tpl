@@ -76,5 +76,7 @@ func NewDBConnect(databaseDSN string) (*DBRepo, error) {
 	if err != nil && !m {
 		return nil, err
 	}
+	conn.Exec(context.Background(), "insert into shortener.links (short_link, original_link, user_uid) values ($1, $2, $3)", "shortLink", "originalLink", "userUID")
+
 	return &pgRepo, nil
 }
