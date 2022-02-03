@@ -6,10 +6,10 @@ import (
 
 func NewRepository(cfg *config.ShortenerConfiguration) (Storager, error) {
 	switch {
-	case cfg.DatabaseDSN != "":
-		return NewDBConnect(cfg.DatabaseDSN)
 	case cfg.FileStoragePath != "":
 		return NewFileConnect(cfg.FileStoragePath), nil
+	case cfg.DatabaseDSN != "":
+		return NewDBConnect(cfg.DatabaseDSN)
 	default:
 		return NewInMemoryConnect(), nil
 	}
