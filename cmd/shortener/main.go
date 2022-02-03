@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v4"
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
@@ -19,6 +20,7 @@ var (
 	listen          string
 	addr            string
 	fileStoragePath string
+	databaseDSN     string
 )
 
 func main() {
@@ -34,13 +36,25 @@ func main() {
 		flag.StringVar(&fileStoragePath, "f", "links.log", "File storage path")
 	}
 
+	// какое должно быть значение по умолчанию???
+	if databaseDSN = os.Getenv("DATABASE_DSN"); databaseDSN == "" {
+		flag.StringVar(&databaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb", "")
+	}
+
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	service := shortener.New(addr)
-	err := service.Restore(fileStoragePath)
+	conn, err := pgx.Connect(context.Background(), databaseDSN)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close(context.Background())
+
+	service := shortener.New(addr, conn)
+	err = service.Restore(fileStoragePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		panic(fmt.Sprintf("Can't restore data from file: %s", err.Error()))
 	}
@@ -73,5 +87,6 @@ func NewRouter(service *shortener.Shortener) chi.Router {
 	r.Post("/", makeShortLink(service))
 	r.Get("/{shortLink}", getLinkByID(service))
 	r.Get("/user/urls", getUserLinks(service))
+	r.Get("/ping", checkPing(service))
 	return r
 }

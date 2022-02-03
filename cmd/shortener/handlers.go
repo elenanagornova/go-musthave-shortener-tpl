@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"go-musthave-shortener-tpl/internal/controller"
@@ -127,5 +128,16 @@ func getUserLinks(service *shortener.Shortener) http.HandlerFunc {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
 		}
+	}
+}
+
+func checkPing(service *shortener.Shortener) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// обратиться к бд
+		if service.DbConn.Ping(context.Background()) != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }
