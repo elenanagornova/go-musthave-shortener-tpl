@@ -51,6 +51,12 @@ func main() {
 	}
 	defer conn.Close(context.Background())
 
+	m, err := repository.RunMigration(DatabaseDSN)
+	if err != nil && !m {
+		fmt.Fprintf(os.Stderr, "Unable to create migration: %v\n", err)
+		return
+	}
+
 	service := shortener.New(Addr, conn)
 	err = service.Restore(fileStoragePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
