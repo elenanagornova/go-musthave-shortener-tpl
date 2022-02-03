@@ -52,7 +52,7 @@ func (M MRepo) SaveLinks(shortLink string, originalLink string, userUID string) 
 }
 
 func (M MRepo) CreateUser(userUID string) error {
-	panic("implement me")
+	return nil
 }
 
 func (MRepo) Close() {

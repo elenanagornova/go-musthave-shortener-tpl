@@ -7,7 +7,7 @@ func (s *Shortener) GetLink(url string) (string, error) {
 	return s.Repo.FindOriginLinkByShortLink(url)
 }
 
-func (s *Shortener) GetLinks(userUID string) []repository.UserLinks {
+func (s *Shortener) GetLinks(userUID string) ([]repository.UserLinks, error) {
 	return s.Repo.GetLinksByuserUID(userUID)
 }
 

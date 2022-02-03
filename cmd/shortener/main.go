@@ -5,21 +5,14 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	config "go-musthave-shortener-tpl/internal/config"
+	"go-musthave-shortener-tpl/internal/config"
 	"go-musthave-shortener-tpl/internal/controller"
 	"go-musthave-shortener-tpl/internal/repository"
-	shortener "go-musthave-shortener-tpl/internal/shortener"
+	"go-musthave-shortener-tpl/internal/shortener"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-)
-
-var (
-	listen          string
-	Addr            string
-	FileStoragePath string
-	DatabaseDSN     string
 )
 
 func main() {
@@ -27,11 +20,11 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
-	repository, err := repository.NewRepository(cfg)
+	rep, err := repository.NewRepository(cfg)
 	if err != nil {
 		panic(fmt.Sprintf("Can't create repository: %s", err.Error()))
 	}
-	service := shortener.New(cfg.Addr, repository)
+	service := shortener.New(cfg.Addr, rep)
 	log.Println("Starting server at port 8080")
 
 	srv := http.Server{

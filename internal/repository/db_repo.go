@@ -14,7 +14,13 @@ func (D *DBRepo) FinalSave() error {
 }
 
 func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
-	return "", nil
+	query := `select short_link, original_link, user_uid from shortener.links where short_link = $1`
+	var links UserLinks
+	result := D.conn.QueryRow(context.Background(), query, shortLink)
+	if err := result.Scan(&links.ShortURL, &links.OriginalURL); err != nil {
+		return "", err
+	}
+	return links.OriginalURL, nil
 }
 
 func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
@@ -23,11 +29,29 @@ func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string
 }
 
 func (D *DBRepo) CreateUser(userUID string) error {
-	panic("implement me")
+	return nil
 }
 
 func (D *DBRepo) GetLinksByuserUID(userUID string) []UserLinks {
-	panic("implement me")
+	query := `select short_link, original_link, user_uid from shortener.links where user_uid = $1`
+	var result []UserLinks
+	rows, err := D.conn.Query(context.Background(), query, userUID)
+	if err != nil {
+		return nil
+	}
+	for rows.Next() {
+		var link UserLinks
+		err = rows.Scan(&link.ShortURL, &link.OriginalURL)
+		if err != nil {
+			return nil
+		}
+		result = append(result, link)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil
+	}
+	return result
 }
 
 func (D *DBRepo) Ping() error {
