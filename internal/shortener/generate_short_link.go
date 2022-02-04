@@ -32,3 +32,17 @@ func GenerateRandomString(n int) string {
 	}
 	return result
 }
+
+//func (s *Shortener) BatchGenerateShortLink(links controller.BatchRequest) (string, error) {
+//	shortLink := GenerateRandomString(5)
+//
+//	u, err := url.Parse(s.Addr)
+//	if err != nil {
+//		return "", fmt.Errorf("failed to parse url: %w", err)
+//	}
+//	u.Path = id
+//	if err := s.Repo.SaveLinks(id, originalURL, userUID); err != nil {
+//		return "", err
+//	}
+//	return u.String(), nil
+//}

@@ -1,13 +1,15 @@
 package shortener
 
-import "go-musthave-shortener-tpl/internal/repository"
+import (
+	"go-musthave-shortener-tpl/internal/entity"
+)
 
 // GetLink returns full link by short link
 func (s *Shortener) GetLink(url string) (string, error) {
 	return s.Repo.FindOriginLinkByShortLink(url)
 }
 
-func (s *Shortener) GetLinks(userUID string) []repository.UserLinks {
+func (s *Shortener) GetLinks(userUID string) []entity.UserLinks {
 	return s.Repo.GetLinksByuserUID(userUID)
 }
 

@@ -2,12 +2,17 @@ package repository
 
 import (
 	"encoding/json"
+	"go-musthave-shortener-tpl/internal/entity"
 	"os"
 )
 
 type FRepo struct {
 	filepath  string
-	userLinks map[string][]UserLinks
+	userLinks map[string][]entity.UserLinks
+}
+
+func (F FRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error) {
+	return []entity.DBBatchShortenerLinks{}, nil
 }
 
 func (F FRepo) FinalSave() error {
@@ -19,10 +24,10 @@ func (F FRepo) FinalSave() error {
 	return json.NewEncoder(fp).Encode(F.userLinks)
 }
 
-func (F FRepo) GetLinksByuserUID(userUID string) []UserLinks {
+func (F FRepo) GetLinksByuserUID(userUID string) []entity.UserLinks {
 	links, ok := F.userLinks[userUID]
 	if !ok {
-		return []UserLinks{}
+		return []entity.UserLinks{}
 	}
 	return links
 }
@@ -46,15 +51,15 @@ func (F FRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
 
 func (F FRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
 	if _, exist := F.userLinks[userUID]; !exist {
-		F.userLinks[userUID] = []UserLinks{}
+		F.userLinks[userUID] = []entity.UserLinks{}
 	}
 
-	F.userLinks[userUID] = append(F.userLinks[userUID], UserLinks{ShortURL: shortLink, OriginalURL: originalLink})
+	F.userLinks[userUID] = append(F.userLinks[userUID], entity.UserLinks{ShortURL: shortLink, OriginalURL: originalLink})
 	return nil
 }
 
 func (F FRepo) CreateUser(userUID string) error {
-	panic("implement me")
+	return nil
 }
 func (FRepo) Close() {
 	// do nothing
@@ -63,6 +68,6 @@ func (FRepo) Close() {
 func NewFileConnect(fileStoragePath string) *FRepo {
 	return &FRepo{
 		filepath:  fileStoragePath,
-		userLinks: map[string][]UserLinks{},
+		userLinks: map[string][]entity.UserLinks{},
 	}
 }

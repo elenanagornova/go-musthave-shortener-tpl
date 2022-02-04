@@ -56,5 +56,6 @@ func NewRouter(service *shortener.Shortener) chi.Router {
 	r.Get("/{shortLink}", controller.GetLinkByID(service))
 	r.Get("/user/urls", controller.GetUserLinks(service))
 	r.Get("/ping", controller.CheckConn(service))
+	r.Post("/api/shorten/batch", controller.MakeShortLinkBatch(service))
 	return r
 }

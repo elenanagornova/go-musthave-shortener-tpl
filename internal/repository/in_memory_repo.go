@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"go-musthave-shortener-tpl/internal/entity"
 )
 
 var (
@@ -9,7 +10,11 @@ var (
 )
 
 type MRepo struct {
-	userLinks map[string][]UserLinks
+	userLinks map[string][]entity.UserLinks
+}
+
+func (M MRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error) {
+	return []entity.DBBatchShortenerLinks{}, nil
 }
 
 func (M MRepo) FinalSave() error {
@@ -17,10 +22,10 @@ func (M MRepo) FinalSave() error {
 	return nil
 }
 
-func (M MRepo) GetLinksByuserUID(userUID string) []UserLinks {
+func (M MRepo) GetLinksByuserUID(userUID string) []entity.UserLinks {
 	links, ok := M.userLinks[userUID]
 	if !ok {
-		return []UserLinks{}
+		return []entity.UserLinks{}
 	}
 	return links
 }
@@ -44,10 +49,10 @@ func (M MRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
 
 func (M MRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
 	if _, exist := M.userLinks[userUID]; !exist {
-		M.userLinks[userUID] = []UserLinks{}
+		M.userLinks[userUID] = []entity.UserLinks{}
 	}
 
-	M.userLinks[userUID] = append(M.userLinks[userUID], UserLinks{ShortURL: shortLink, OriginalURL: originalLink})
+	M.userLinks[userUID] = append(M.userLinks[userUID], entity.UserLinks{ShortURL: shortLink, OriginalURL: originalLink})
 	return nil
 }
 
@@ -60,5 +65,5 @@ func (MRepo) Close() {
 }
 
 func NewInMemoryConnect() *MRepo {
-	return &MRepo{userLinks: map[string][]UserLinks{}}
+	return &MRepo{userLinks: map[string][]entity.UserLinks{}}
 }
