@@ -1,7 +1,10 @@
 package shortener
 
 import (
+	"errors"
 	"fmt"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"math/rand"
 	"net/url"
 	"time"
@@ -16,7 +19,15 @@ func (s *Shortener) GenerateShortLink(originalURL string, userUID string) (strin
 		return "", fmt.Errorf("failed to parse url: %w", err)
 	}
 	u.Path = id
-	if err := s.Repo.SaveLinks(id, originalURL, userUID); err != nil {
+	if error := s.Repo.SaveLinks(id, originalURL, userUID); error != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(error, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			path, err := s.Repo.FindShortLinkByOriginLink(originalURL)
+			if err != nil {
+				return "", err
+			}
+			return s.Addr + path, error
+		}
 		return "", err
 	}
 	return u.String(), nil
@@ -32,17 +43,3 @@ func GenerateRandomString(n int) string {
 	}
 	return result
 }
-
-//func (s *Shortener) BatchGenerateShortLink(links controller.BatchRequest) (string, error) {
-//	shortLink := GenerateRandomString(5)
-//
-//	u, err := url.Parse(s.Addr)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to parse url: %w", err)
-//	}
-//	u.Path = id
-//	if err := s.Repo.SaveLinks(id, originalURL, userUID); err != nil {
-//		return "", err
-//	}
-//	return u.String(), nil
-//}

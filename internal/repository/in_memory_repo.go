@@ -13,6 +13,10 @@ type MRepo struct {
 	userLinks map[string][]entity.UserLinks
 }
 
+func (M MRepo) FindShortLinkByOriginLink(originLink string) (string, error) {
+	return "", nil
+}
+
 func (M MRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error) {
 	return []entity.DBBatchShortenerLinks{}, nil
 }

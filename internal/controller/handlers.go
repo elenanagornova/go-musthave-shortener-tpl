@@ -43,12 +43,15 @@ func MakeShortLink(service *shortener.Shortener) http.HandlerFunc {
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				hellpers.SetUIDCookie(w, userUID)
 				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte(resultLink))
+				return
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
 				return
 			}
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
 		}
 		hellpers.SetUIDCookie(w, userUID)
 		w.WriteHeader(http.StatusCreated)
@@ -97,8 +100,10 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 
 		resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
 		if err != nil {
-			if err.Error() == pgerrcode.UniqueViolation {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte(resultLink))
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)

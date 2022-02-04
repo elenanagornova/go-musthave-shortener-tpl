@@ -7,6 +7,8 @@ import (
 type Storager interface {
 	FindOriginLinkByShortLink(shortLink string) (string, error)
 
+	FindShortLinkByOriginLink(originLink string) (string, error)
+
 	SaveLinks(shortLink string, originalLink string, userUID string) error
 
 	BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error)
