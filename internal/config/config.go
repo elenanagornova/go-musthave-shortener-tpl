@@ -27,7 +27,7 @@ func LoadConfiguration() *ShortenerConfiguration {
 	}
 
 	if cfg.DatabaseDSN = os.Getenv("DATABASE_DSN"); cfg.DatabaseDSN == "" {
-		flag.StringVar(&cfg.DatabaseDSN, "d", "", "")
+		flag.StringVar(&cfg.DatabaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb?sslmode=disable", "")
 	}
 	flag.Parse()
 

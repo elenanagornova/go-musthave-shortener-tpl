@@ -11,4 +11,3 @@ CREATE TABLE IF NOT EXISTS links
     user_uid          varchar
 );
 CREATE UNIQUE INDEX IF NOT EXISTS original_link_idx ON links USING btree (original_link);
-CREATE UNIQUE INDEX IF NOT EXISTS short_link_idx ON links USING btree (short_link);

@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgerrcode"
 	"go-musthave-shortener-tpl/internal/entity"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
@@ -58,6 +59,10 @@ func GetLinkByID(service *shortener.Shortener) http.HandlerFunc {
 
 		originalLink, err := service.GetLink(shortLink)
 		if err != nil {
+			if err.Error() == pgerrcode.UniqueViolation {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -89,6 +94,10 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 
 		resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
 		if err != nil {
+			if err.Error() == pgerrcode.UniqueViolation {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return

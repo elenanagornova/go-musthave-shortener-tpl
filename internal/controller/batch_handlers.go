@@ -47,15 +47,7 @@ func MakeShortLinkBatch(service *shortener.Shortener) http.HandlerFunc {
 		for _, resLink := range allLinks {
 			respBody = append(respBody, entity.BatchShortenerResponse{CorrelationID: resLink.CorrelationID, ShortURL: service.Addr + resLink.ShortURL})
 		}
-		//resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
-		//if err != nil {
-		//	w.WriteHeader(http.StatusInternalServerError)
-		//	w.Write([]byte(err.Error()))
-		//	return
-		//}
 
-		//var responseBody ShortenerResponse
-		//responseBody.Result = resultLink
 		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
