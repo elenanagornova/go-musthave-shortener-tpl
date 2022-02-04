@@ -44,6 +44,7 @@ func MakeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 				hellpers.SetUIDCookie(w, userUID)
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusConflict)
 				w.Write([]byte(resultLink))
 				return
@@ -54,6 +55,7 @@ func MakeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			}
 		}
 		hellpers.SetUIDCookie(w, userUID)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(resultLink))
 	}
@@ -102,6 +104,8 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				hellpers.SetUIDCookie(w, userUID)
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusConflict)
 				w.Write([]byte(resultLink))
 				return
