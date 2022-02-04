@@ -100,15 +100,12 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
+		var statusCode = http.StatusCreated
 		resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
 		if err != nil {
 			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				hellpers.SetUIDCookie(w, userUID)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(resultLink))
-				return
+			if errors.As(err, &pgErr) && pgErr.Code != pgerrcode.UniqueViolation {
+				statusCode = http.StatusConflict
 			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -120,7 +117,7 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 
 		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(statusCode)
 		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
 			return
