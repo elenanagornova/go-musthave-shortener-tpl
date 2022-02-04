@@ -2,10 +2,7 @@ package controller
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgerrcode"
 	"go-musthave-shortener-tpl/internal/entity"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
@@ -40,25 +37,22 @@ func MakeShortLink(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 		resultLink, err := service.GenerateShortLink(string(body), userUID)
-		if err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				hellpers.SetUIDCookie(w, userUID)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(resultLink))
-				return
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
+		if err != nil && resultLink != "" {
+			hellpers.SetUIDCookie(w, userUID)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(resultLink))
+		} else if err != nil && resultLink == "" {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		} else {
+			hellpers.SetUIDCookie(w, userUID)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(resultLink))
 		}
-		hellpers.SetUIDCookie(w, userUID)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(resultLink))
 	}
+
 }
 
 func GetLinkByID(service *shortener.Shortener) http.HandlerFunc {
@@ -100,27 +94,29 @@ func MakeShortLinkJSON(service *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		var statusCode = http.StatusCreated
+		var responseBody ShortenerResponse
+		hellpers.SetUIDCookie(w, userUID)
+		w.Header().Set("Content-Type", "application/json")
+
 		resultLink, err := service.GenerateShortLink(originalLink.URL, userUID)
-		if err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code != pgerrcode.UniqueViolation {
-				statusCode = http.StatusConflict
+		if err != nil && resultLink != "" {
+			w.WriteHeader(http.StatusConflict)
+			responseBody.Result = resultLink
+			if err := json.NewEncoder(w).Encode(responseBody); err != nil {
+				http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+				return
 			}
+		} else if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
-		}
-
-		var responseBody ShortenerResponse
-		responseBody.Result = resultLink
-
-		hellpers.SetUIDCookie(w, userUID)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		if err := json.NewEncoder(w).Encode(responseBody); err != nil {
-			http.Error(w, "Unmarshalling error", http.StatusBadRequest)
-			return
+		} else {
+			w.WriteHeader(http.StatusCreated)
+			responseBody.Result = resultLink
+			if err := json.NewEncoder(w).Encode(responseBody); err != nil {
+				http.Error(w, "Unmarshalling error", http.StatusBadRequest)
+				return
+			}
 		}
 	}
 }
