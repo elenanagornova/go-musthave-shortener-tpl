@@ -23,11 +23,11 @@ func LoadConfiguration() *ShortenerConfiguration {
 	}
 
 	if cfg.FileStoragePath = os.Getenv("FILE_STORAGE_PATH"); cfg.FileStoragePath == "" {
-		flag.StringVar(&cfg.FileStoragePath, "f", "links.log", "File storage path")
+		flag.StringVar(&cfg.FileStoragePath, "f", "", "File storage path")
 	}
 
 	if cfg.DatabaseDSN = os.Getenv("DATABASE_DSN"); cfg.DatabaseDSN == "" {
-		flag.StringVar(&cfg.DatabaseDSN, "d", "", "")
+		flag.StringVar(&cfg.DatabaseDSN, "d", "postgres://shorteneruser:pgpwd4@localhost:5432/shortenerdb?sslmode=disable", "")
 	}
 	flag.Parse()
 

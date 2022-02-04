@@ -17,14 +17,14 @@ func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
 	query := `select short_link, original_link, user_uid from shortener.links where short_link = $1`
 	var links UserLinks
 	result := D.conn.QueryRow(context.Background(), query, shortLink)
-	if err := result.Scan(&links.ShortURL, &links.OriginalURL); err != nil {
+	if err := result.Scan(&links.ShortURL, &links.OriginalURL, &links.UserUID); err != nil {
 		return "", err
 	}
 	return links.OriginalURL, nil
 }
 
 func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
-	_, err := D.conn.Exec(context.Background(), "insert into shortener.links (short_link, original_link, user_uid) values ($1, $2, $3)", shortLink, originalLink, userUID)
+	_, err := D.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid) values ($1, $2, $3)", shortLink, originalLink, userUID)
 	return err
 }
 
@@ -41,7 +41,7 @@ func (D *DBRepo) GetLinksByuserUID(userUID string) []UserLinks {
 	}
 	for rows.Next() {
 		var link UserLinks
-		err = rows.Scan(&link.ShortURL, &link.OriginalURL)
+		err = rows.Scan(&link.ShortURL, &link.OriginalURL, &link.UserUID)
 		if err != nil {
 			return nil
 		}
