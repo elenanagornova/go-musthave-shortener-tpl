@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go-musthave-shortener-tpl/internal/controller"
+	"go-musthave-shortener-tpl/internal/repository"
 	"go-musthave-shortener-tpl/internal/shortener"
 	"io"
 	"io/ioutil"
@@ -95,7 +97,7 @@ func TestGetPostNegative(t *testing.T) {
 		},
 	}
 
-	service := shortener.New(testAddr)
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
@@ -124,7 +126,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			request: request{
 				url:    "/",
 				method: http.MethodPost,
-				body:   "http://yandex.ru",
+				body:   "http://n9o1ira2r927q.net/jfwdrxbz1",
 			},
 			want: want{
 				responseStatusCode: http.StatusCreated,
@@ -133,7 +135,8 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(testAddr)
+
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -170,7 +173,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(testAddr)
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -219,12 +222,12 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := shortener.New(testAddr)
+			service := shortener.New(testAddr, repository.NewInMemoryConnect())
 			r := NewRouter(service)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, tt.request.contentType, strings.NewReader(tt.request.body))
-			var originalLink ShortenerResponse
+			var originalLink controller.ShortenerResponse
 			if err := json.Unmarshal([]byte(body), &originalLink); err != nil {
 				assert.True(t, false)
 			}
@@ -302,7 +305,8 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 			},
 		},
 	}
-	service := shortener.New(testAddr)
+
+	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 	r := NewRouter(service)
 	ts := httptest.NewServer(r)
 	defer ts.Close()

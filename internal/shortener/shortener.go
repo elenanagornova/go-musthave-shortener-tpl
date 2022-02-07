@@ -2,14 +2,14 @@ package shortener
 
 // Shortener service for shortener links
 type Shortener struct {
-	linksMap map[string]string
-	addr     string
+	Repo Storager
+	Addr string
 }
 
 // New shortener instance
-func New(addr string) *Shortener {
+func New(addr string, storager Storager) *Shortener {
 	return &Shortener{
-		addr:     addr,
-		linksMap: make(map[string]string),
+		Addr: addr,
+		Repo: storager,
 	}
 }
