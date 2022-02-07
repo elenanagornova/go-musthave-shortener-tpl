@@ -41,9 +41,9 @@ func (F FRepo) Ping() error {
 }
 
 func (F FRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
-	link := F.userLinks
+	userLinks := F.userLinks
 
-	for _, links := range link {
+	for _, links := range userLinks {
 		for _, link := range links {
 			if link.ShortURL == shortLink {
 				return link.OriginalURL, nil

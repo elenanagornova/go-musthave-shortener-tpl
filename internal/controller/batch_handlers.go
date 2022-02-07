@@ -5,7 +5,6 @@ import (
 	"go-musthave-shortener-tpl/internal/entity"
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"go-musthave-shortener-tpl/internal/shortener"
-	"log"
 	"net/http"
 )
 
@@ -13,27 +12,21 @@ func MakeShortLinkBatch(service *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userUID := userUIDFromRequest(r)
 
-		headerContentTtype := r.Header.Get("Content-Type")
-		if headerContentTtype != "application/json" {
+		headerContentType := r.Header.Get("Content-Type")
+		if headerContentType != "application/json" {
 			http.Error(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
 			return
 		}
-		defer func() {
-			if err := r.Body.Close(); err != nil {
-				log.Println(err)
-			}
-		}()
 
 		var links []entity.BatchShortenerRequest
 		if err := json.NewDecoder(r.Body).Decode(&links); err != nil {
 			http.Error(w, "Something wrong with request", http.StatusBadRequest)
 			return
 		}
-
-		var dbLinks []entity.DBBatchShortenerLinks
-		for _, link := range links {
+		var dbLinks = make([]entity.DBBatchShortenerLinks, len(links))
+		for i, link := range links {
 			shortURL := hellpers.GenerateRandomString(5)
-			dbLinks = append(dbLinks, entity.DBBatchShortenerLinks{ShortURL: shortURL, OriginalURL: link.OriginalURL, UserUID: userUID, CorrelationID: link.CorrelationID})
+			dbLinks[i] = entity.DBBatchShortenerLinks{ShortURL: shortURL, OriginalURL: link.OriginalURL, UserUID: userUID, CorrelationID: link.CorrelationID}
 		}
 
 		allLinks, err := service.Repo.BatchSaveLinks(dbLinks)
