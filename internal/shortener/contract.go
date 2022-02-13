@@ -6,7 +6,7 @@ import (
 )
 
 type Storager interface {
-	FindOriginLinkByShortLink(shortLink string) (string, error)
+	FindOriginLinkByShortLink(shortLink string) (entity.UserLinks, error)
 
 	FindShortLinkByOriginLink(originLink string) (string, error)
 

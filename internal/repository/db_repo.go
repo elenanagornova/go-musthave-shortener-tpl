@@ -60,14 +60,15 @@ func (D *DBRepo) FinalSave() error {
 	return D.conn.Close(context.Background())
 }
 
-func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
+func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (entity.UserLinks, error) {
 	query := `select short_link, original_link, user_uid, removed from shortener.links where short_link = $1`
 	var links entity.UserLinks
 	result := D.conn.QueryRow(context.Background(), query, shortLink)
 	if err := result.Scan(&links.ShortURL, &links.OriginalURL, &links.UserUID, &links.Removed); err != nil {
-		return "", err
+		return entity.UserLinks{}, err
 	}
-	return links.OriginalURL, nil
+
+	return entity.UserLinks{ShortURL: links.ShortURL, OriginalURL: links.OriginalURL, UserUID: links.UserUID, Removed: links.Removed}, nil
 }
 
 func (D *DBRepo) FindShortLinkByOriginLink(originalLink string) (string, error) {

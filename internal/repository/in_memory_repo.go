@@ -43,17 +43,18 @@ func (M MRepo) Ping() error {
 	return nil
 }
 
-func (M MRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
+func (M MRepo) FindOriginLinkByShortLink(shortLink string) (entity.UserLinks, error) {
 	link := M.userLinks
 
 	for _, links := range link {
 		for _, link := range links {
 			if link.ShortURL == shortLink {
-				return link.OriginalURL, nil
+
+				return entity.UserLinks{ShortURL: shortLink, OriginalURL: link.OriginalURL}, nil
 			}
 		}
 	}
-	return "", ErrLinkNotFound
+	return entity.UserLinks{}, ErrLinkNotFound
 }
 
 func (M MRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
