@@ -18,7 +18,7 @@ func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
 	}
 	defer tx.Rollback(context.Background())
 
-	query := "UPDATE shortener.links SET `removed` = true WHERE short_link IN $1 AND user_uid = $2"
+	query := "UPDATE shortener.links SET removed = true WHERE short_link = $1 AND user_uid = $2"
 
 	for _, value := range task.Links {
 		_, err = tx.Exec(context.Background(), query, value, task.UID)
@@ -32,7 +32,6 @@ func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
 		return err
 	}
 	return nil
-	// UPDATE shortener.links SET `removed` = true WHERE short_link IN $1
 }
 
 func (D *DBRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error) {
@@ -42,9 +41,9 @@ func (D *DBRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.
 	}
 	defer tx.Rollback(context.Background())
 
-	query := "insert into shortener.links(short_link, original_link, user_uid) values ($1, $2, $3)"
+	query := "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)"
 	for _, value := range links {
-		_, err = tx.Exec(context.Background(), query, value.ShortURL, value.OriginalURL, value.UserUID)
+		_, err = tx.Exec(context.Background(), query, value.ShortURL, value.OriginalURL, value.UserUID, false)
 		if err != nil {
 			return []entity.DBBatchShortenerLinks{}, err
 		}
@@ -62,7 +61,7 @@ func (D *DBRepo) FinalSave() error {
 }
 
 func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
-	query := `select short_link, original_link, user_uid from shortener.links where short_link = $1`
+	query := `select short_link, original_link, user_uid, removed from shortener.links where short_link = $1`
 	var links entity.UserLinks
 	result := D.conn.QueryRow(context.Background(), query, shortLink)
 	if err := result.Scan(&links.ShortURL, &links.OriginalURL, &links.UserUID); err != nil {
@@ -82,7 +81,7 @@ func (D *DBRepo) FindShortLinkByOriginLink(originalLink string) (string, error) 
 }
 
 func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
-	_, err := D.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", shortLink, originalLink, userUID, false)
+	_, err := D.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", shortLink, originalLink, userUID, "false")
 	return err
 }
 
@@ -134,7 +133,7 @@ func NewDBConnect(databaseDSN string) (*DBRepo, error) {
 	if err != nil && !m {
 		return nil, err
 	}
-	pgRepo.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", "shortLink", "originalLink", "userUID", "removed")
+	pgRepo.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", "shortLink", "originalLink", "userUID", "false")
 
 	return &pgRepo, nil
 }

@@ -6,6 +6,8 @@ import (
 	"go-musthave-shortener-tpl/internal/hellpers"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 func DeleteLinks(deleteCh chan deleter.DeleteTask) http.HandlerFunc {
@@ -23,9 +25,14 @@ func DeleteLinks(deleteCh chan deleter.DeleteTask) http.HandlerFunc {
 			http.Error(w, "Something wrong with request", http.StatusBadRequest)
 			return
 		}
+		var shortLinks []string
+		for _, link := range userLinks {
+			shortenLink, _ := url.Parse(link)
+			shortLinks = append(shortLinks, strings.TrimLeft(shortenLink.Path, "/"))
+		}
 		deleteCh <- deleter.DeleteTask{
-			UID:   "",
-			Links: nil,
+			UID:   userUID,
+			Links: shortLinks,
 		}
 		hellpers.SetUIDCookie(w, userUID)
 		w.Header().Set("Content-Type", "application/json")
