@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"go-musthave-shortener-tpl/internal/deleter"
 	"go-musthave-shortener-tpl/internal/entity"
 )
 
@@ -11,6 +12,10 @@ var (
 
 type MRepo struct {
 	userLinks map[string][]entity.UserLinks
+}
+
+func (M MRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
+	return nil
 }
 
 func (M MRepo) FindShortLinkByOriginLink(originLink string) (string, error) {

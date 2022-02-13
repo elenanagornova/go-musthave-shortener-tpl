@@ -3,11 +3,36 @@ package repository
 import (
 	"context"
 	"github.com/jackc/pgx/v4"
+	"go-musthave-shortener-tpl/internal/deleter"
 	"go-musthave-shortener-tpl/internal/entity"
 )
 
 type DBRepo struct {
 	conn *pgx.Conn
+}
+
+func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
+	tx, err := D.conn.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	query := "UPDATE shortener.links SET `removed` = true WHERE short_link IN $1 AND user_uid = $2"
+
+	for _, value := range task.Links {
+		_, err = tx.Exec(context.Background(), query, value, task.UID)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+	// UPDATE shortener.links SET `removed` = true WHERE short_link IN $1
 }
 
 func (D *DBRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.DBBatchShortenerLinks, error) {
@@ -18,7 +43,6 @@ func (D *DBRepo) BatchSaveLinks(links []entity.DBBatchShortenerLinks) ([]entity.
 	defer tx.Rollback(context.Background())
 
 	query := "insert into shortener.links(short_link, original_link, user_uid) values ($1, $2, $3)"
-
 	for _, value := range links {
 		_, err = tx.Exec(context.Background(), query, value.ShortURL, value.OriginalURL, value.UserUID)
 		if err != nil {
@@ -58,7 +82,7 @@ func (D *DBRepo) FindShortLinkByOriginLink(originalLink string) (string, error) 
 }
 
 func (D *DBRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {
-	_, err := D.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid) values ($1, $2, $3)", shortLink, originalLink, userUID)
+	_, err := D.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", shortLink, originalLink, userUID, false)
 	return err
 }
 
@@ -110,7 +134,7 @@ func NewDBConnect(databaseDSN string) (*DBRepo, error) {
 	if err != nil && !m {
 		return nil, err
 	}
-	pgRepo.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid) values ($1, $2, $3)", "shortLink", "originalLink", "userUID")
+	pgRepo.conn.Exec(context.Background(), "insert into shortener.links(short_link, original_link, user_uid, removed) values ($1, $2, $3, $4)", "shortLink", "originalLink", "userUID", "removed")
 
 	return &pgRepo, nil
 }
