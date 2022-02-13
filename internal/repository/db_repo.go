@@ -64,7 +64,7 @@ func (D *DBRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
 	query := `select short_link, original_link, user_uid, removed from shortener.links where short_link = $1`
 	var links entity.UserLinks
 	result := D.conn.QueryRow(context.Background(), query, shortLink)
-	if err := result.Scan(&links.ShortURL, &links.OriginalURL, &links.UserUID); err != nil {
+	if err := result.Scan(&links.ShortURL, &links.OriginalURL, &links.UserUID, &links.Removed); err != nil {
 		return "", err
 	}
 	return links.OriginalURL, nil
