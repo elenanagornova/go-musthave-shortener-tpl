@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"go-musthave-shortener-tpl/internal/deleter"
 	"go-musthave-shortener-tpl/internal/entity"
@@ -12,7 +13,7 @@ type FRepo struct {
 	userLinks map[string][]entity.UserLinks
 }
 
-func (F FRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
+func (F FRepo) BatchUpdateLinks(ctx context.Context, task deleter.DeleteTask) error {
 	return nil
 }
 

@@ -11,7 +11,7 @@ type DBRepo struct {
 	conn *pgx.Conn
 }
 
-func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
+func (D *DBRepo) BatchUpdateLinks(ctx context.Context, task deleter.DeleteTask) error {
 	tx, err := D.conn.Begin(context.Background())
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
 
 	query := "UPDATE shortener.links SET removed = true WHERE short_link = any($1) AND user_uid = $2"
 
-	_, err = tx.Exec(context.Background(), query, task.Links, task.UID)
+	_, err = tx.Exec(ctx, query, task.Links, task.UID)
 	if err != nil {
 		return err
 	}

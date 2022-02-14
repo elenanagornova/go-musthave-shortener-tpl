@@ -31,9 +31,6 @@ func main() {
 	deleteTasks := make(chan deleter.DeleteTask)
 	service := shortener.New(cfg.Addr, rep)
 	delService := deleter.New(rep, deleteTasks)
-	for i := 0; i < deleteWorkers; i++ {
-		delService.AddWorker()
-	}
 	go delService.Run(ctx)
 	log.Println("Starting server at port 8080")
 

@@ -8,61 +8,38 @@ import (
 type Deleter struct {
 	storage Storage
 	upd     <-chan DeleteTask
-	workers []chan DeleteTask
-	queue   []DeleteTask
-	mu      sync.Mutex
 }
 
 func New(storage Storage, upd <-chan DeleteTask) *Deleter {
 	return &Deleter{
 		storage: storage,
 		upd:     upd,
-		workers: []chan DeleteTask{},
-		queue:   []DeleteTask{},
-		mu:      sync.Mutex{},
 	}
 }
 
 func (d *Deleter) Run(ctx context.Context) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				for _, tasks := range d.workers {
-					close(tasks)
-				}
-				return
-			case task := <-d.upd:
-				d.mu.Lock()
-				d.queue = append(d.queue, task)
-				d.mu.Unlock()
-			}
-		}
-	}()
-	var task DeleteTask
-	for _, worker := range d.workers {
-		if len(d.queue) > 0 {
-			// queue not empty
-			d.mu.Lock()
-			task, d.queue = d.queue[0], d.queue[1:]
-			worker <- task
-			d.mu.Unlock()
+	wg := sync.WaitGroup{}
+	for {
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			return
+		case task := <-d.upd:
+			go func() {
+				wg.Add(1)
+				defer wg.Done()
+				d.AddWorker(ctx, task)
+			}()
 		}
 	}
 }
 
-func (d *Deleter) AddWorker() {
-	workerChan := make(chan DeleteTask)
-	d.workers = append(d.workers, workerChan)
-	go func(workerChan chan DeleteTask) {
-		for task := range workerChan {
-			d.storage.BatchUpdateLinks(task)
-		}
-	}(workerChan)
+func (d *Deleter) AddWorker(ctx context.Context, task DeleteTask) {
+	d.storage.BatchUpdateLinks(ctx, task)
 }
 
 type Storage interface {
-	BatchUpdateLinks(task DeleteTask) error
+	BatchUpdateLinks(ctx context.Context, task DeleteTask) error
 }
 
 type DeleteTask struct {
