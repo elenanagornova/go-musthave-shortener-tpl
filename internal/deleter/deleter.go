@@ -25,8 +25,8 @@ func (d *Deleter) Run(ctx context.Context) {
 			wg.Wait()
 			return
 		case task := <-d.upd:
+			wg.Add(1)
 			go func() {
-				wg.Add(1)
 				defer wg.Done()
 				d.AddWorker(ctx, task)
 			}()
