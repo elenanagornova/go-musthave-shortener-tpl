@@ -18,7 +18,7 @@ func (D *DBRepo) BatchUpdateLinks(task deleter.DeleteTask) error {
 	}
 	defer tx.Rollback(context.Background())
 
-	query := "UPDATE shortener.links SET removed = true WHERE short_link IN ($1) AND user_uid = $2"
+	query := "UPDATE shortener.links SET removed = true WHERE short_link = any($1) AND user_uid = $2"
 
 	_, err = tx.Exec(context.Background(), query, task.Links, task.UID)
 	if err != nil {
