@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"fmt"
+	"go-musthave-shortener-tpl/internal/deleter"
 	"go-musthave-shortener-tpl/internal/entity"
 )
 
@@ -11,6 +13,10 @@ var (
 
 type MRepo struct {
 	userLinks map[string][]entity.UserLinks
+}
+
+func (M MRepo) BatchUpdateLinks(ctx context.Context, task deleter.DeleteTask) error {
+	return nil
 }
 
 func (M MRepo) FindShortLinkByOriginLink(originLink string) (string, error) {
@@ -38,17 +44,18 @@ func (M MRepo) Ping() error {
 	return nil
 }
 
-func (M MRepo) FindOriginLinkByShortLink(shortLink string) (string, error) {
+func (M MRepo) FindOriginLinkByShortLink(shortLink string) (entity.UserLinks, error) {
 	link := M.userLinks
 
 	for _, links := range link {
 		for _, link := range links {
 			if link.ShortURL == shortLink {
-				return link.OriginalURL, nil
+
+				return entity.UserLinks{ShortURL: shortLink, OriginalURL: link.OriginalURL}, nil
 			}
 		}
 	}
-	return "", ErrLinkNotFound
+	return entity.UserLinks{}, ErrLinkNotFound
 }
 
 func (M MRepo) SaveLinks(shortLink string, originalLink string, userUID string) error {

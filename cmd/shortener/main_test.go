@@ -99,7 +99,7 @@ func TestGetPostNegative(t *testing.T) {
 
 	service := shortener.New(testAddr, repository.NewInMemoryConnect())
 
-	r := NewRouter(service)
+	r := NewRouter(service, nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -137,7 +137,7 @@ func TestShortenerHandlerPOSTMethod(t *testing.T) {
 	}
 
 	service := shortener.New(testAddr, repository.NewInMemoryConnect())
-	r := NewRouter(service)
+	r := NewRouter(service, nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -174,7 +174,7 @@ func TestShortenerHandlerGETMethodPositive(t *testing.T) {
 		},
 	}
 	service := shortener.New(testAddr, repository.NewInMemoryConnect())
-	r := NewRouter(service)
+	r := NewRouter(service, nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -223,7 +223,7 @@ func TestMakeShortenLinkPOSTMethodPositive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service := shortener.New(testAddr, repository.NewInMemoryConnect())
-			r := NewRouter(service)
+			r := NewRouter(service, nil)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			resp, body := SendTestRequest(t, ts, tt.request.method, tt.request.url, tt.request.contentType, strings.NewReader(tt.request.body))
@@ -307,7 +307,7 @@ func TestMakeShortenLinkPOSTMethodNegative(t *testing.T) {
 	}
 
 	service := shortener.New(testAddr, repository.NewInMemoryConnect())
-	r := NewRouter(service)
+	r := NewRouter(service, nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 

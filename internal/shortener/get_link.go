@@ -5,7 +5,7 @@ import (
 )
 
 // GetLink returns full link by short link
-func (s *Shortener) GetLink(url string) (string, error) {
+func (s *Shortener) GetLink(url string) (entity.UserLinks, error) {
 	return s.Repo.FindOriginLinkByShortLink(url)
 }
 
@@ -13,6 +13,6 @@ func (s *Shortener) GetLinks(userUID string) []entity.UserLinks {
 	return s.Repo.GetLinksByuserUID(userUID)
 }
 
-func (s *Shortener) GetOriginalByShort(shortLink string) (string, error) {
+func (s *Shortener) GetOriginalByShort(shortLink string) (entity.UserLinks, error) {
 	return s.Repo.FindOriginLinkByShortLink(shortLink)
 }

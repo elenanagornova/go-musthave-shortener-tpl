@@ -63,14 +63,18 @@ func GetLinkByID(service *shortener.Shortener) http.HandlerFunc {
 			http.Error(w, "Empty required param shortLink", http.StatusBadRequest)
 		}
 
-		originalLink, err := service.GetLink(shortLink)
+		links, err := service.GetLink(shortLink)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
-		w.Header().Set("Location", originalLink)
-		w.WriteHeader(http.StatusTemporaryRedirect)
+		w.Header().Set("Location", links.OriginalURL)
+		if links.Removed {
+			w.WriteHeader(http.StatusGone)
+		} else {
+			w.WriteHeader(http.StatusTemporaryRedirect)
+		}
 	}
 }
 
